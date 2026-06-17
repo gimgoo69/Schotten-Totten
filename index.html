@@ -38,7 +38,6 @@
         .card-list { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 100px; padding-bottom: 10px; align-items: center; position: relative; }
         .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: pointer; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8), inset 0 0 5px rgba(255,255,255,0.3); background-size: cover; background-position: center; background-repeat: no-repeat; image-rendering: -webkit-optimize-contrast; image-rendering: high-quality; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         
-        /* 이미지 로딩 실패 또는 없을 때를 대비한 기본 CSS 색상 */
         .card.red { color: #ff9999; border-color: #c0392b; background-color: #c0392b; } 
         .card.blue { color: #99ccff; border-color: #2980b9; background-color: #2980b9;} 
         .card.green { color: #99ff99; border-color: #27ae60; background-color: #27ae60;} 
@@ -64,9 +63,10 @@
         .btn { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: white; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); } 
         .btn:hover { transform: translateY(-2px); } .btn-play { background: #2ecc71; } .btn-prove { background: #9b59b6; }
         
-        .result-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
+        .result-overlay, .ai-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
         .result-box { background: rgba(25, 35, 45, 0.95); padding: 50px 60px; border-radius: 28px; border: 3px solid #f1c40f; text-align: center; box-shadow: 0 30px 70px rgba(0,0,0,0.9); }
         .btn-restart { background: #f1c40f; color: #0d1217; font-size: 20px; padding: 15px 45px; border-radius: 14px; cursor: pointer; font-weight: 900; border:none; margin-top: 20px;}
+        .ai-mode-btn { background: #e74c3c; color: white; border: none; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -78,6 +78,8 @@
         <div id="player-role">접속 중...</div>
         <div id="game-status" style="color: #f1c40f;">방을 생성하거나 참여하는 중입니다.</div>
         <div id="share-url" style="font-size: 11px; color: #bdc3c7; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 4px;"></div>
+        <!-- 🤖 AI 모드 버튼 추가 -->
+        <button id="ai-start-btn" class="ai-mode-btn" onclick="openAIModal()">🤖 AI와 대전하기</button>
     </div>
 
     <div id="score-area" class="score-board">나의 경계석: 0개 | 상대 경계석: 0개</div>
@@ -117,6 +119,20 @@
         </div>
     </div>
 
+    <!-- 🤖 AI 난이도 선택 모달 추가 -->
+    <div id="ai-select-screen" class="ai-modal-overlay">
+        <div class="result-box">
+            <div class="result-title" style="font-size: 32px; font-weight:900; color: #fff; margin-bottom:15px;">🤖 AI 난이도 선택</div>
+            <div style="font-size: 16px; margin-bottom: 30px; color: #bdc3c7;">상대할 인공지능의 수준을 선택해 주세요.</div>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn btn-play" onclick="executeAIStart('EASY')">🟢 초급</button>
+                <button class="btn" style="background:#f39c12;" onclick="executeAIStart('NORMAL')">🟡 중급</button>
+                <button class="btn" style="background:#e74c3c;" onclick="executeAIStart('HARD')">🔴 고급</button>
+            </div>
+            <button class="btn" style="margin-top:25px; background:transparent; border:1px solid rgba(255,255,255,0.3);" onclick="closeAIModal()">돌아가기</button>
+        </div>
+    </div>
+
     <div id="result-screen" class="result-overlay">
         <div class="result-box">
             <div id="final-winner-title" style="font-size: 44px; font-weight: 900; color: #fff; margin-bottom:20px;">🎉 WINNER!</div>
@@ -127,16 +143,16 @@
 </div>
 
 <script>
-    // ⚠️ 아래 정보를 곧 생성할 본인의 파이어베이스 설정으로 교체하세요!
+    // ⚠️ 파이어베이스 설정을 유지하세요!
     const firebaseConfig = {
-        apiKey: "AIzaSyD5aeGP-U7E_eudovTtcFkO2H3W2agnbkI",
-        authDomain: "schotten-totten-web.firebaseapp.com",
-        databaseURL: "https://schotten-totten-web-default-rtdb.firebaseio.com",
-        projectId: "schotten-totten-web",
-        storageBucket: "schotten-totten-web.firebasestorage.app",
-        messagingSenderId: "85431663415",
-        appId: "1:85431663415:web:a3752031c347276be0f8b2",
-        measurementId: "G-CX0PKWYP4K"
+      apiKey: "AIzaSyD5aeGP-U7E_eudovTtcFkO2H3W2agnbkI",
+      authDomain: "schotten-totten-web.firebaseapp.com",
+      databaseURL: "https://schotten-totten-web-default-rtdb.firebaseio.com",
+      projectId: "schotten-totten-web",
+      storageBucket: "schotten-totten-web.firebasestorage.app",
+      messagingSenderId: "85431663415",
+      appId: "1:85431663415:web:a3752031c347276be0f8b2",
+      measurementId: "G-CX0PKWYP4K"
     };
     
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
@@ -177,14 +193,17 @@
             setupNewGameInit(); 
         } else {
             if (!myRole) {
-                if (currentData.gameState === 'WAITING') {
+                if (currentData.gameState === 'WAITING' && !currentData.isAIMode) {
                     myRole = 'p2';
                     sessionStorage.setItem('st_role_' + roomId, 'p2');
+                    roomRef.child('p2_online').set(true);
                     roomRef.child('gameState').set('PLAYING');
                     chatRef.push({ sender: 'system', text: `👤 상대방이 접속했습니다! 게임이 시작됩니다.`, timestamp: Date.now() });
                 } else {
                     alert("이미 게임이 진행중인 방입니다."); return;
                 }
+            } else {
+                roomRef.child(myRole + '_online').set(true);
             }
         }
         document.getElementById('player-role').innerText = `당신은 [Player ${myRole === 'p1' ? '1 (방장)' : '2 (참가자)'}] 입니다.`;
@@ -192,7 +211,10 @@
 
         roomRef.on('value', (snap) => {
             roomData = snap.val();
-            if(roomData) updateGameUI();
+            if(roomData) {
+                updateGameUI();
+                checkAndRunAI(); // AI 턴인지 확인
+            }
         });
 
         chatRef.limitToLast(20).on('child_added', (snapshot) => {
@@ -203,18 +225,179 @@
             msgEl.innerText = data.sender === 'system' ? data.text : `${data.sender === 'p1' ? 'P1' : 'P2'}: ${data.text}`;
             div.appendChild(msgEl);
             
-            // 채팅 부드럽게 자동 스크롤
-            requestAnimationFrame(() => {
-                div.scrollTop = div.scrollHeight;
-            });
+            requestAnimationFrame(() => { div.scrollTop = div.scrollHeight; });
         });
     });
+
+    // 🤖 AI 모달 열기/닫기
+    function openAIModal() {
+        if(!roomData) return;
+        document.getElementById('ai-select-screen').style.display = 'flex';
+    }
+    function closeAIModal() {
+        document.getElementById('ai-select-screen').style.display = 'none';
+    }
+
+    // 🤖 AI 시작 실행
+    function executeAIStart(difficulty) {
+        document.getElementById('ai-select-screen').style.display = 'none';
+        roomData.p2_online = true; 
+        roomData.isAIMode = true; 
+        roomData.aiDifficulty = difficulty; 
+        roomData.gameState = 'PLAYING';
+        roomRef.set(roomData);
+        
+        let diffLabel = difficulty === 'EASY' ? '🟢 초급' : (difficulty === 'HARD' ? '🔴 고급' : '🟡 중급');
+        chatRef.push({ sender: 'system', text: `🤖 인공지능(${diffLabel}) 부족이 등판했습니다. 당신의 선공입니다!`, timestamp: Date.now() });
+    }
+
+    // 🤖 AI 동작 트리거
+    function checkAndRunAI() {
+        if (myRole === 'p1' && roomData && roomData.isAIMode && roomData.gameState === 'PLAYING' && roomData.turn === 'p2') {
+            setTimeout(runAIIntelligence, 1200); // 1.2초 고민하는 척
+        }
+    }
+
+    // 🤖 핵심 AI 알고리즘
+    function runAIIntelligence() {
+        if(roomData.turn !== 'p2' || roomData.gameState !== 'PLAYING') return;
+        const aiHand = roomData.p2_hand || [];
+        if(aiHand.length === 0) return;
+
+        // 1. [논리적 증명 및 점령] 먼저 확인
+        for(let i=0; i<9; i++) {
+            if(roomData.stones[i] === 'none' && (roomData.p2_field[i] || []).length === 3) {
+                if(aiTryProve(i)) {
+                    // 증명에 성공했으면 데이터를 세팅하고 한 턴 종료로 취급 (카드 보충 등 스킵)
+                    return; 
+                }
+            }
+        }
+
+        // 2. 카드 배치 고민하기
+        let bestPlay = { handIdx: -1, stoneIdx: -1, score: -999 };
+        const diff = roomData.aiDifficulty || 'NORMAL';
+
+        for(let h=0; h<aiHand.length; h++) {
+            let card = aiHand[h];
+            for(let s=0; s<9; s++) {
+                if(roomData.stones[s] !== 'none') continue; // 이미 먹힌 돌 패스
+                let currentField = roomData.p2_field[s] || [];
+                if(currentField.length >= 3) continue; // 꽉 찬 돌 패스
+
+                let score = card.value;
+                if(diff !== 'EASY') { // 중급/고급은 깔린 카드와 비교 (플러시, 스트레이트 노리기)
+                    if(currentField.length > 0) {
+                        let colorMatch = currentField.every(c => c.color === card.color);
+                        if(colorMatch) score += 30; 
+                        let isAdj = currentField.some(c => Math.abs(c.value - card.value) === 1 || Math.abs(c.value - card.value) === 2);
+                        if(isAdj) score += 20;
+                    }
+                }
+                score += Math.random() * 5; // 약간의 무작위성 (너무 똑같이만 하지 않도록)
+                
+                if(score > bestPlay.score) {
+                    bestPlay.score = score;
+                    bestPlay.handIdx = h;
+                    bestPlay.stoneIdx = s;
+                }
+            }
+        }
+
+        // 3. 찾은 자리에 배치 및 결과 처리
+        if(bestPlay.handIdx !== -1 && bestPlay.stoneIdx !== -1) {
+            let playedCard = aiHand.splice(bestPlay.handIdx, 1)[0];
+            let targetCol = roomData.p2_field[bestPlay.stoneIdx] || [];
+            targetCol.push(playedCard);
+            roomData.p2_field[bestPlay.stoneIdx] = targetCol;
+
+            // 방금 내서 양쪽 다 3장이 되었는지 검사
+            let oppField = roomData.p1_field[bestPlay.stoneIdx] || [];
+            if(targetCol.length === 3 && oppField.length === 3) {
+                let p2Strength = evaluateFormation(targetCol);
+                let p1Strength = evaluateFormation(oppField);
+                if(p2Strength > p1Strength) { roomData.stones[bestPlay.stoneIdx] = 'p2'; } 
+                else { roomData.stones[bestPlay.stoneIdx] = 'p1'; }
+            }
+
+            // 카드 보충
+            if(roomData.deck && roomData.deck.length > 0) {
+                aiHand.push(roomData.deck.pop());
+            }
+
+            roomData.turn = 'p1';
+            checkGameWinner(); 
+            roomRef.set(roomData);
+        }
+    }
+
+    // 🤖 AI 전용 논리적 증명 엔진 (나의 증명 코드와 동일한 로직을 AI 시점으로 수행)
+    function aiTryProve(stoneIndex) {
+        let aiField = roomData.p2_field[stoneIndex] || [];
+        let aiStrength = evaluateFormation(aiField);
+        let p1Field = roomData.p1_field[stoneIndex] || [];
+
+        let usedCards = [];
+        for(let i=0; i<9; i++) {
+            usedCards.push(...(roomData.p1_field[i] || []));
+            usedCards.push(...(roomData.p2_field[i] || []));
+        }
+        usedCards.push(...(roomData.p2_hand || [])); // AI는 자기 손패를 알고 계산함
+
+        let availablePool = [];
+        colors.forEach(color => {
+            for(let v=1; v<=9; v++) {
+                let isUsed = usedCards.some(c => c.color === color && c.value === v);
+                if(!isUsed) availablePool.push({color, value: v});
+            }
+        });
+
+        let maxOppStrength = 0;
+        let slotsToFill = 3 - p1Field.length;
+
+        if (slotsToFill === 0) { maxOppStrength = evaluateFormation(p1Field); } 
+        else if (slotsToFill === 1) {
+            for(let i=0; i<availablePool.length; i++) {
+                let str = evaluateFormation([...p1Field, availablePool[i]]);
+                if(str > maxOppStrength) maxOppStrength = str;
+            }
+        } 
+        else if (slotsToFill === 2) {
+            for(let i=0; i<availablePool.length; i++) {
+                for(let j=i+1; j<availablePool.length; j++) {
+                    let str = evaluateFormation([...p1Field, availablePool[i], availablePool[j]]);
+                    if(str > maxOppStrength) maxOppStrength = str;
+                }
+            }
+        } 
+        else if (slotsToFill === 3) {
+            for(let i=0; i<availablePool.length; i++) {
+                for(let j=i+1; j<availablePool.length; j++) {
+                    for(let k=j+1; k<availablePool.length; k++) {
+                        let str = evaluateFormation([availablePool[i], availablePool[j], availablePool[k]]);
+                        if(str > maxOppStrength) maxOppStrength = str;
+                    }
+                }
+            }
+        }
+
+        if (aiStrength >= maxOppStrength) {
+            chatRef.push({ sender: 'system', text: `🤖 AI가 연산을 끝내고 ${stoneIndex+1}번 경계석의 소유권을 강제로 빼앗아 갑니다!`, timestamp: Date.now() });
+            roomData.stones[stoneIndex] = 'p2';
+            checkGameWinner();
+            roomRef.set(roomData);
+            return true;
+        }
+        return false;
+    }
 
     function setupNewGameInit() {
         myRole = 'p1';
         sessionStorage.setItem('st_role_' + roomId, 'p1');
         let newRoom = {
             gameState: 'WAITING', turn: 'p1', 
+            p1_online: true, p2_online: false, 
+            isAIMode: false, aiDifficulty: 'NORMAL',
             deck: createShuffledDeck(),
             stones: Array(9).fill('none'), 
             p1_field: Array(9).fill([]), p2_field: Array(9).fill([]),
@@ -235,7 +418,6 @@
                 deck.push({ 
                     color: color, 
                     value: i,
-                    // 나중에 이미지를 넣을 경로 설정 (예: images/red_1.png)
                     img: `images/${color}_${i}.png` 
                 });
             }
@@ -432,8 +614,15 @@
         const table = document.getElementById('game-table');
         const status = document.getElementById('game-status');
         
+        // AI 모드이거나 진짜 사람이 들어왔으면 AI 시작 버튼 숨기기
+        if (roomData.p2_online || roomData.isAIMode) {
+            document.getElementById('ai-start-btn').style.display = 'none';
+        } else {
+            document.getElementById('ai-start-btn').style.display = 'inline-block';
+        }
+
         if (roomData.gameState === 'WAITING') {
-            status.innerText = "⏳ 2P를 기다리는 중입니다...";
+            status.innerText = "⏳ 2P를 기다리는 중입니다... 친구 초대 혹은 AI 버튼을 눌러주세요!";
             table.className = "game-table waiting"; return;
         }
         
@@ -447,7 +636,11 @@
         } else {
             document.getElementById('result-screen').style.display = 'none';
             table.className = "game-table active";
-            status.innerText = roomData.turn === myRole ? "🟢 내 차례입니다! 카드를 선택하고 경계석을 누르세요." : "🔴 상대방 차례입니다...";
+            if (roomData.turn === myRole) {
+                status.innerText = "🟢 내 차례입니다! 카드를 선택하고 경계석을 누르세요.";
+            } else {
+                status.innerText = roomData.isAIMode ? "🤖 AI가 수를 고심하고 있습니다..." : "🔴 상대방 차례입니다...";
+            }
         }
 
         document.getElementById('deck-count').innerText = roomData.deck ? roomData.deck.length : 0;
@@ -458,11 +651,7 @@
         myHand.forEach((card, idx) => {
             let div = document.createElement('div');
             div.className = `card ${card.color} ${selectedHandIndex === idx ? 'selected' : ''}`;
-            
-            // 이미지가 있으면 이미지를 적용 (없으면 CSS 색상이 기본으로 표시됨)
             div.style.backgroundImage = `url('${card.img}')`; 
-            
-            // 이미지 없이도 숫자가 보이게 설정 (나중에 이미지를 넣으면 안의 숫자를 지우거나 숨기시면 됩니다)
             div.innerHTML = `<div class="card-num">${card.value}</div>`;
             div.onclick = () => selectCardInHand(idx);
             handDiv.appendChild(div);
