@@ -11,10 +11,13 @@
         #game-wrapper { width: 1400px; height: 950px; background: linear-gradient(135deg, #18232e 0%, #0d1217 100%); position: relative; display: flex; flex-direction: column; padding: 10px 20px; box-sizing: border-box; transform-origin: center center; box-shadow: 0 0 50px rgba(0,0,0,0.8); color: #fff; text-align: center; flex-shrink: 0; }
         h1 { font-size: 24px; color: #f1c40f; text-shadow: 0 2px 10px rgba(241, 196, 15, 0.4); margin: 0 0 5px 0; }
         
-        .info-panel { background: rgba(20, 30, 40, 0.8); color: #ecf0f1; padding: 6px 15px; border-radius: 10px; margin: 0 auto 5px auto; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .info-panel { background: rgba(20, 30, 40, 0.8); color: #ecf0f1; padding: 6px 15px; border-radius: 10px; margin: 0 auto 5px auto; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
         .score-board { font-size: 20px; font-weight: bold; background: rgba(30, 40, 50, 0.9); color: #f1c40f; display: inline-block; padding: 4px 30px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
-        .ai-mode-btn { background: #e74c3c; color: white; border: none; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); transition: 0.2s; }
-        .ai-mode-btn:hover { background: #c0392b; transform: translateY(-1px); }
+        
+        .top-btn { background: #34495e; color: white; border: none; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.2s; border: 1px solid rgba(255,255,255,0.1); }
+        .top-btn:hover { background: #2c3e50; transform: translateY(-1px); }
+        .ai-mode-btn { background: #e74c3c; border-color: #c0392b; }
+        .ai-mode-btn:hover { background: #c0392b; }
 
         .main-container { flex: 1; display: flex; width: 100%; gap: 15px; min-height: 0; }
         .game-table { flex: 3; display: flex; flex-direction: column; gap: 5px; position: relative; transition: opacity 0.3s ease; }
@@ -28,10 +31,20 @@
         .column:hover { z-index: 100; border-color: rgba(241, 196, 15, 0.5); background: rgba(30, 40, 50, 0.9); }
 
         .stacked-container { position: relative; width: 100%; flex: 1; min-height: 90px; display: flex; justify-content: center; z-index: 20; pointer-events: none;}
+        
         .stacked-container.opp-side .stacked-card { top: auto; bottom: calc(var(--card-idx) * 20px); pointer-events: auto; }
         .stacked-container.my-side .stacked-card { top: calc(var(--card-idx) * 20px); pointer-events: auto; }
-        .stacked-card { position: absolute; left: 50%; margin-left: -29px; transition: top 0.3s ease, bottom 0.3s ease, transform 0.2s, box-shadow 0.2s; z-index: var(--card-idx); }
+        .stacked-card { position: absolute; left: 50%; margin-left: -29px; transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease; z-index: var(--card-idx); }
         
+        .column:hover .stacked-container.my-side .stacked-card { top: calc(20px + var(--card-idx) * 32px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+        .column:hover .stacked-container.opp-side .stacked-card { bottom: calc(20px + var(--card-idx) * 32px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+
+        .column .stacked-container .stacked-card:hover { transform: scale(1.3) translateY(0) !important; box-shadow: 0 20px 40px rgba(0,0,0,1) !important; z-index: 1000 !important; }
+        .stacked-container.my-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(-25px) scale(0.95) !important; }
+        .stacked-container.my-side .stacked-card:hover ~ .stacked-card { transform: translateY(25px) scale(0.95) !important; z-index: calc(500 - var(--card-idx)) !important; }
+        .stacked-container.opp-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(25px) scale(0.95) !important; }
+        .stacked-container.opp-side .stacked-card:hover ~ .stacked-card { transform: translateY(-25px) scale(0.95) !important; z-index: calc(500 - var(--card-idx)) !important; }
+
         .stone-row { display: flex; justify-content: space-between; gap: 5px; padding: 5px 12px; background: rgba(20, 30, 40, 0.8); border-radius: 8px; margin: 2px 0; }
         .stone-marker { flex: 1; height: 35px; background: #7f8c8d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #34495e; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); font-size: 16px; transition: 0.3s; position: relative; overflow: hidden; cursor: pointer; }
         .stone-marker:hover { border-color: #f1c40f; transform: scale(1.05); color: #fff;}
@@ -41,7 +54,7 @@
         .env-fog { border-bottom: 6px solid #9e9e9e !important; }
 
         .card-list { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 95px; padding-bottom: 5px; align-items: center; position: relative; }
-        .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: pointer; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8); background-size: cover; background-position: center; transition: transform 0.2s ease; image-rendering: high-quality; }
+        .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: pointer; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8); background-size: cover; background-position: center; transition: transform 0.2s ease; image-rendering: high-quality; position: relative; }
         
         .card.red { color: #ff9999; background-color: #c0392b; } 
         .card.blue { color: #99ccff; background-color: #2980b9;} 
@@ -53,6 +66,9 @@
         .card.tactic { background-color: #2c3e50; border: 2px solid #9b59b6; color: #f1c40f; }
         .card-back-clan { background: repeating-linear-gradient(45deg, #795548, #795548 8px, #5D4037 8px, #5D4037 16px) !important; border-color: #3e2723 !important; }
         .card-back-tactic { background: repeating-linear-gradient(45deg, #8e44ad, #8e44ad 8px, #732d91 8px, #732d91 16px) !important; border-color: #4a235a !important; }
+
+        /* 💡 툴팁 CSS (전략카드 스킬 설명창) */
+        .card[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); color: #f1c40f; padding: 8px 12px; border-radius: 6px; font-size: 11px; white-space: pre-line; width: 140px; text-align: left; line-height: 1.4; border: 1px solid #9b59b6; box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 10000; pointer-events: none; }
 
         .card .card-num { margin: auto; font-size: 28px; font-weight: 900; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;}
         .card.tactic .card-num { font-size: 14px; text-align: center; line-height: 1.2; padding: 2px;}
@@ -73,8 +89,8 @@
         .btn { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: white; transition: 0.2s; } 
         .btn:hover { transform: translateY(-2px); } .btn-play { background: #2ecc71; } .btn-trick { background: #9b59b6; }
         
-        .result-overlay, .draw-overlay, .ai-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
-        .result-box { background: rgba(25, 35, 45, 0.95); padding: 50px 60px; border-radius: 28px; border: 3px solid #f1c40f; text-align: center; }
+        .result-overlay, .draw-overlay, .ai-modal-overlay, .info-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
+        .result-box { background: rgba(25, 35, 45, 0.95); padding: 50px 60px; border-radius: 28px; border: 3px solid #f1c40f; text-align: center; color: #fff; max-width: 600px; line-height: 1.6;}
         .btn-restart { background: #f1c40f; color: #0d1217; font-size: 20px; padding: 15px 45px; border-radius: 14px; cursor: pointer; font-weight: 900; border:none; margin-top: 20px;}
     </style>
 </head>
@@ -87,7 +103,9 @@
         <div id="player-role">접속 중...</div>
         <div id="game-status" style="color: #f1c40f; font-size: 16px;">방을 생성하거나 참여하는 중입니다.</div>
         <div id="share-url" style="font-size: 11px; color: #bdc3c7; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 4px;"></div>
-        <button id="ai-start-btn" class="ai-mode-btn" onclick="openAIModal()">🤖 AI와 대전하기</button>
+        <button class="top-btn" onclick="toggleModal('formation-modal')">🏆 족보 확인</button>
+        <button class="top-btn" onclick="toggleModal('tutorial-modal')">📖 룰 설명</button>
+        <button id="ai-start-btn" class="top-btn ai-mode-btn" onclick="toggleModal('ai-select-screen')">🤖 AI와 대전하기</button>
     </div>
 
     <div id="score-area" class="score-board">나의 경계석: 0개 | 상대 경계석: 0개</div>
@@ -132,16 +150,43 @@
         </div>
     </div>
 
-    <!-- AI 난이도 모달 -->
+    <div id="formation-modal" class="info-modal-overlay">
+        <div class="result-box" style="border-color: #3498db; text-align: left;">
+            <h2 style="color:#3498db; margin-top:0; border-bottom:1px solid #3498db; padding-bottom:10px;">🏆 쇼텐토텐 족보 강도</h2>
+            <ol style="font-size: 15px;">
+                <li><b style="color:#f1c40f">스트레이트 플러시 (Color Run):</b> 같은 색, 연속된 숫자 (예: 빨강 7-8-9)</li>
+                <li><b style="color:#f1c40f">쓰리 오브 어 카인드 (Three of a Kind):</b> 숫자 3개가 모두 같음 (예: 빨-파-초 5-5-5)</li>
+                <li><b style="color:#f1c40f">플러시 (Color):</b> 색상 3개가 모두 같음 (예: 파랑 2-5-9)</li>
+                <li><b style="color:#f1c40f">스트레이트 (Run):</b> 연속된 숫자 (예: 빨-파-흰 3-4-5)</li>
+                <li><b style="color:#f1c40f">합계 (Sum):</b> 위 조건에 해당하지 않으면 단순히 숫자의 합</li>
+            </ol>
+            <p style="color:#bdc3c7; font-size:13px; text-align:center;">* 동점일 경우 3장을 <b>늦게 완성한 쪽(공격자)이 패배</b>합니다.</p>
+            <div style="text-align:center;"><button class="btn" style="background:#34495e;" onclick="toggleModal('formation-modal')">닫기</button></div>
+        </div>
+    </div>
+
+    <div id="tutorial-modal" class="info-modal-overlay">
+        <div class="result-box" style="border-color: #2ecc71; text-align: left;">
+            <h2 style="color:#2ecc71; margin-top:0; border-bottom:1px solid #2ecc71; padding-bottom:10px;">📖 핵심 룰 요약</h2>
+            <ul style="font-size: 14px;">
+                <li><b>승리 조건:</b> 임의의 경계석 <b>5개</b>를 먹거나, 인접한 경계석 <b>3개</b>를 먹으면 즉시 승리!</li>
+                <li><b>전략 카드 제한:</b> 내가 쓴 전략 카드의 수는 상대방이 쓴 횟수보다 최대 <b>1장</b>까지만 많을 수 있습니다.</li>
+                <li><b>자동 논리 증명:</b> 양쪽이 꽉 차지 않아도, 내가 이길 수밖에 없는 상황이면 컴퓨터가 <b>자동으로 증명하여 돌을 뺏어옵니다.</b></li>
+            </ul>
+            <div style="text-align:center;"><button class="btn" style="background:#34495e;" onclick="toggleModal('tutorial-modal')">닫기</button></div>
+        </div>
+    </div>
+
     <div id="ai-select-screen" class="ai-modal-overlay">
         <div class="result-box">
             <div style="font-size: 32px; font-weight:900; color: #fff; margin-bottom:15px;">🤖 AI 난이도 선택</div>
-            <div style="font-size: 16px; margin-bottom: 30px; color: #bdc3c7;">확장판 AI는 부대 카드와 환경 카드 위주로 전략을 짭니다.</div>
+            <div style="font-size: 16px; margin-bottom: 30px; color: #bdc3c7;">확장판 AI는 부대 및 환경 카드 위주로 플레이합니다.</div>
             <div style="display: flex; gap: 15px; justify-content: center;">
-                <button class="btn btn-play" onclick="executeAIStart('EASY')">🟢 연습 (EASY)</button>
-                <button class="btn" style="background:#e74c3c;" onclick="executeAIStart('HARD')">🔴 실전 (HARD)</button>
+                <button class="btn btn-play" onclick="executeAIStart('EASY')">🟢 쉬움</button>
+                <button class="btn" style="background:#f39c12;" onclick="executeAIStart('NORMAL')">🟡 중간</button>
+                <button class="btn" style="background:#e74c3c;" onclick="executeAIStart('HARD')">🔴 어려움</button>
             </div>
-            <button class="btn" style="margin-top:25px; background:transparent; border:1px solid rgba(255,255,255,0.3);" onclick="closeAIModal()">돌아가기</button>
+            <button class="btn" style="margin-top:25px; background:transparent; border:1px solid rgba(255,255,255,0.3);" onclick="toggleModal('ai-select-screen')">돌아가기</button>
         </div>
     </div>
 
@@ -172,8 +217,7 @@
       projectId: "schotten-totten-web",
       storageBucket: "schotten-totten-web.firebasestorage.app",
       messagingSenderId: "85431663415",
-      appId: "1:85431663415:web:a3752031c347276be0f8b2",
-      measurementId: "G-CX0PKWYP4K"
+      appId: "1:85431663415:web:a3752031c347276be0f8b2"
     };
     
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
@@ -197,7 +241,12 @@
     let trickTarget = null;
     let scoutSelection = [];
 
-    // 💡 안전한 필드 데이터 로드 함수 (파이어베이스 배열 삭제 버그 원천 차단)
+    // 모달 토글
+    function toggleModal(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
+    }
+
     function getFieldCards(role, colIdx) {
         if (!roomData || !roomData[`${role}_field`]) return [];
         return roomData[`${role}_field`][colIdx] || [];
@@ -231,31 +280,21 @@
 
     roomRef.on('value', (snap) => {
         let currentData = snap.val();
-        if (currentData === null) {
-            setupNewGameInit(); 
-            return;
-        } 
-        
-        // 과거 버전 데이터(오류의 원인) 감지 시 자동 갱신
+        if (currentData === null) { setupNewGameInit(); return; } 
         if (currentData.stones && typeof currentData.stones[0] === 'string') {
             currentData.stones = Array.from({length: 9}, () => ({ owner: 'none', env: 'none' }));
-            roomRef.set(currentData);
-            return;
+            roomRef.set(currentData); return;
         }
 
         roomData = currentData;
         
         if (!myRole) {
             if (roomData.gameState === 'WAITING' && !roomData.isAIMode) {
-                myRole = 'p2';
-                sessionStorage.setItem('st_role_' + roomId, 'p2');
-                roomRef.child('p2_online').set(true);
-                roomRef.child('gameState').set('PLAYING');
+                myRole = 'p2'; sessionStorage.setItem('st_role_' + roomId, 'p2');
+                roomRef.child('p2_online').set(true); roomRef.child('gameState').set('PLAYING');
                 chatRef.push({ sender: 'system', text: `👤 상대방이 접속했습니다! 게임이 시작됩니다.`, timestamp: Date.now() });
             } else { alert("방이 꽉 찼거나 AI 모드 진행 중입니다."); return; }
-        } else {
-            roomRef.child(myRole + '_online').set(true);
-        }
+        } else { roomRef.child(myRole + '_online').set(true); }
 
         document.getElementById('player-role').innerText = `당신은 [Player ${myRole === 'p1' ? '1 (방장)' : '2 (참가자)'}] 입니다.`;
         document.getElementById('share-url').innerText = `초대 링크: ${window.location.origin}${window.location.pathname}?room=${roomId}`;
@@ -274,9 +313,6 @@
         requestAnimationFrame(() => { div.scrollTop = div.scrollHeight; });
     });
 
-    function openAIModal() { if(roomData) document.getElementById('ai-select-screen').style.display = 'flex'; }
-    function closeAIModal() { document.getElementById('ai-select-screen').style.display = 'none'; }
-    
     function executeAIStart(difficulty) {
         document.getElementById('ai-select-screen').style.display = 'none';
         roomData.p2_online = true; 
@@ -295,6 +331,7 @@
         }
     }
 
+    // AI 난이도(EASY, NORMAL, HARD)에 따른 3단계 로직 적용
     function runAIIntelligence() {
         if(roomData.turn !== 'p2' || roomData.gameState !== 'PLAYING') return;
         const aiHand = roomData.p2_hand || [];
@@ -307,23 +344,21 @@
                     if(roomData.clanDeck) roomData.clanDeck.unshift(returned);
                 }
             }
-            roomData.turn = 'p1'; roomData.step = 'PLAY';
-            roomRef.set(roomData); return;
+            roomData.turn = 'p1'; roomData.step = 'PLAY'; roomRef.set(roomData); return;
         }
 
         if (roomData.step === 'DRAW') {
             let drawTactic = Math.random() < 0.2 && roomData.tacticsDeck && roomData.tacticsDeck.length > 0;
             if(drawTactic) { roomData.p2_hand.push(roomData.tacticsDeck.pop()); } 
             else if (roomData.clanDeck && roomData.clanDeck.length > 0) { roomData.p2_hand.push(roomData.clanDeck.pop()); }
-            
-            roomData.step = 'PLAY'; roomData.turn = 'p1';
-            roomRef.set(roomData); return;
+            roomData.step = 'PLAY'; roomData.turn = 'p1'; roomRef.set(roomData); return;
         }
 
         let bestPlay = { handIdx: -1, stoneIdx: -1, score: -999, isEnv: false };
         let myCount = roomData.p2_tactics_count || 0;
         let oppCount = roomData.p1_tactics_count || 0;
         let canPlayTactic = myCount < oppCount + 1;
+        let diff = roomData.aiDifficulty;
 
         for(let h=0; h<aiHand.length; h++) {
             let card = aiHand[h];
@@ -332,13 +367,12 @@
 
             for(let s=0; s<9; s++) {
                 if(roomData.stones[s].owner !== 'none') continue;
-                
                 let limit = roomData.stones[s].env === 'MUD' ? 4 : 3;
                 let currentField = getFieldCards('p2', s);
                 
                 if(card.tType === 'MUD' || card.tType === 'FOG') {
                     if(roomData.stones[s].env !== 'none') continue;
-                    let score = 50 + Math.random() * 20; 
+                    let score = (diff === 'EASY') ? 10 : 50 + Math.random() * 20; 
                     if (score > bestPlay.score) bestPlay = { handIdx: h, stoneIdx: s, score: score, isEnv: true };
                     continue;
                 }
@@ -346,23 +380,29 @@
                 if(currentField.length >= limit) continue;
 
                 let score = card.value || 5; 
-                score += Math.random() * 10;
+                // 난이도별 점수 배점 세분화
+                if (diff !== 'EASY') {
+                    if (currentField.length > 0) {
+                        let colorMatch = currentField.every(c => c.color === card.color);
+                        if(colorMatch) score += (diff === 'HARD' ? 40 : 20); 
+                        let isAdj = currentField.some(c => Math.abs(c.value - card.value) === 1);
+                        if(isAdj) score += (diff === 'HARD' ? 30 : 15);
+                    }
+                }
+                score += Math.random() * (diff === 'EASY' ? 30 : 5);
+                
                 if (score > bestPlay.score) bestPlay = { handIdx: h, stoneIdx: s, score: score, isEnv: false };
             }
         }
 
-        if (bestPlay.handIdx === -1) {
-            aiHand.pop(); 
-            roomData.step = 'DRAW';
-            roomRef.set(roomData); return;
-        }
+        if (bestPlay.handIdx === -1) { aiHand.pop(); roomData.step = 'DRAW'; roomRef.set(roomData); return; }
 
         let playedCard = aiHand.splice(bestPlay.handIdx, 1)[0];
         if (playedCard.type === 'tactic') roomData.p2_tactics_count = (roomData.p2_tactics_count || 0) + 1;
 
         if (bestPlay.isEnv) {
             roomData.stones[bestPlay.stoneIdx].env = playedCard.tType;
-            chatRef.push({ sender: 'system', text: `🤖 AI가 ${bestPlay.stoneIdx+1}번 구역에 [${playedCard.name}] 환경 카드를 발동했습니다.`, timestamp: Date.now() });
+            chatRef.push({ sender: 'system', text: `🤖 AI가 ${bestPlay.stoneIdx+1}번 구역에 환경 카드를 발동했습니다.`, timestamp: Date.now() });
         } else {
             addCardToField('p2', bestPlay.stoneIdx, playedCard);
         }
@@ -380,10 +420,8 @@
             isAIMode: false, aiDifficulty: 'NORMAL',
             clanDeck: createClanDeck(), tacticsDeck: createTacticsDeck(),
             stones: Array.from({length: 9}, () => ({ owner: 'none', env: 'none' })), 
-            p1_field: Array.from({length: 9}, () => []), 
-            p2_field: Array.from({length: 9}, () => []),
-            p1_hand: [], p2_hand: [],
-            p1_tactics_count: 0, p2_tactics_count: 0
+            p1_field: Array.from({length: 9}, () => []), p2_field: Array.from({length: 9}, () => []),
+            p1_hand: [], p2_hand: [], p1_tactics_count: 0, p2_tactics_count: 0
         };
         for(let i=0; i<7; i++) {
             newRoom.p1_hand.push(newRoom.clanDeck.pop());
@@ -403,16 +441,16 @@
 
     function createTacticsDeck() {
         return [
-            { type: 'tactic', tType: 'JOKER', name: '조커', img: 'images/t_joker.png' },
-            { type: 'tactic', tType: 'JOKER', name: '조커', img: 'images/t_joker.png' },
-            { type: 'tactic', tType: 'SPY', name: '스파이<br>(7)', img: 'images/t_spy.png' },
-            { type: 'tactic', tType: 'SHIELD', name: '방패병<br>(1~3)', img: 'images/t_shield.png' },
-            { type: 'tactic', tType: 'MUD', name: '진흙탕<br>(4장)', img: 'images/t_mud.png' },
-            { type: 'tactic', tType: 'FOG', name: '안개<br>(합계)', img: 'images/t_fog.png' },
-            { type: 'tactic', tType: 'TRAITOR', name: '배신자<br>(스틸)', img: 'images/t_traitor.png' },
-            { type: 'tactic', tType: 'DESERTER', name: '탈주자<br>(파괴)', img: 'images/t_deserter.png' },
-            { type: 'tactic', tType: 'REDEPLOY', name: '재배치<br>(이동)', img: 'images/t_redeploy.png' },
-            { type: 'tactic', tType: 'SCOUT', name: '정찰병<br>(+3-2)', img: 'images/t_scout.png' }
+            { type: 'tactic', tType: 'JOKER', name: '조커', img: 'images/t_joker.png', desc: "★ 부대카드 대체 ★\n가장 유리한 색상과 숫자로\n자동 계산됩니다." },
+            { type: 'tactic', tType: 'JOKER', name: '조커', img: 'images/t_joker.png', desc: "★ 부대카드 대체 ★\n가장 유리한 색상과 숫자로\n자동 계산됩니다." },
+            { type: 'tactic', tType: 'SPY', name: '스파이<br>(7)', img: 'images/t_spy.png', desc: "★ 부대카드 대체 ★\n숫자는 7로 고정되며\n유리한 색상으로 계산됩니다." },
+            { type: 'tactic', tType: 'SHIELD', name: '방패병<br>(1~3)', img: 'images/t_shield.png', desc: "★ 부대카드 대체 ★\n숫자 1,2,3 중 하나,\n유리한 색상으로 계산됩니다." },
+            { type: 'tactic', tType: 'MUD', name: '진흙탕<br>(4장)', img: 'images/t_mud.png', desc: "★ 환경 카드 ★\n이 경계석은 3장이 아닌\n4장으로 승부합니다." },
+            { type: 'tactic', tType: 'FOG', name: '안개<br>(합계)', img: 'images/t_fog.png', desc: "★ 환경 카드 ★\n이 경계석은 족보를 무시하고\n오직 숫자의 합으로만 겨룹니다." },
+            { type: 'tactic', tType: 'TRAITOR', name: '배신자<br>(스틸)', img: 'images/t_traitor.png', desc: "★ 속임수 카드 ★\n상대의 부대 카드 1장을\n내 진영의 빈 곳으로 훔칩니다." },
+            { type: 'tactic', tType: 'DESERTER', name: '탈주자<br>(파괴)', img: 'images/t_deserter.png', desc: "★ 속임수 카드 ★\n상대 필드에 놓인 카드 1장을\n영구적으로 파괴합니다." },
+            { type: 'tactic', tType: 'REDEPLOY', name: '재배치<br>(이동)', img: 'images/t_redeploy.png', desc: "★ 속임수 카드 ★\n내 필드에 놓인 카드 1장을\n다른 빈 기둥으로 이동시킵니다." },
+            { type: 'tactic', tType: 'SCOUT', name: '정찰병<br>(+3-2)', img: 'images/t_scout.png', desc: "★ 속임수 카드 ★\n덱에서 3장을 먼저 뽑은 뒤,\n손패 2장을 골라 덱에 넣습니다." }
         ].sort(() => Math.random() - 0.5);
     }
 
@@ -428,25 +466,20 @@
                         let c = roomData[`${myRole}_hand`].splice(idx, 1)[0];
                         roomData.clanDeck.push(c); 
                     });
-                    scoutSelection = [];
-                    roomData.turn = (myRole === 'p1' ? 'p2' : 'p1');
-                    roomData.step = 'PLAY';
+                    scoutSelection = []; roomData.turn = (myRole === 'p1' ? 'p2' : 'p1'); roomData.step = 'PLAY';
                     roomRef.set(roomData);
                 }
             }
             updateGameUI(); return;
         }
 
-        if (selectedHandIndex === index) {
-            cancelSelection(); return;
-        }
+        if (selectedHandIndex === index) { cancelSelection(); return; }
 
         selectedHandIndex = index;
         let card = roomData[`${myRole}_hand`][index];
         let actionPanel = document.getElementById('action-panel');
         actionPanel.innerHTML = '';
         
-        // 💡 속임수 카드 발동 버튼만 생성, 불필요한 알림 패널 삭제
         if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
             actionPanel.innerHTML += `<button class="btn btn-trick" onclick="triggerTrick('${card.tType}')">🔮 [${card.name.replace('<br>',' ')}] 사용하기</button>`;
             actionPanel.innerHTML += `<button class="btn" style="background:#e74c3c;" onclick="cancelSelection()">취소</button>`;
@@ -454,7 +487,6 @@
         } else {
             actionPanel.style.display = 'none';
         }
-
         updateGameUI();
     }
 
@@ -472,24 +504,20 @@
 
     function handleBoardCardClick(e, side, colIdx, cardIdx, cardObj) {
         if (!activeTrick || roomData.turn !== myRole) return;
-        if (trickTarget) return; // 목표가 이미 정해졌다면 배치를 위해 클릭을 통과시킴(Bubbling)
+        if (trickTarget) return; 
 
         if (activeTrick === 'TRAITOR' && side === 'opp') {
             if(cardObj.type === 'tactic') { alert("부대 카드만 훔칠 수 있습니다!"); return; }
-            e.stopPropagation(); // 아래 깔린 기둥이 눌리지 않게 차단
-            trickTarget = { col: colIdx, idx: cardIdx };
-            updateGameUI();
+            e.stopPropagation(); trickTarget = { col: colIdx, idx: cardIdx }; updateGameUI();
         }
         else if (activeTrick === 'DESERTER' && side === 'opp') {
             e.stopPropagation();
             removeCardFromField(side === 'my' ? myRole : (myRole === 'p1' ? 'p2' : 'p1'), colIdx, cardIdx);
-            chatRef.push({ sender: 'system', text: `💨 탈주자 발동! 상대방의 카드가 파괴되었습니다.`, timestamp: Date.now() });
+            chatRef.push({ sender: 'system', text: `💨 탈주자 발동! 상대방 카드가 파괴되었습니다.`, timestamp: Date.now() });
             consumeTrickCard();
         }
         else if (activeTrick === 'REDEPLOY' && side === 'my') {
-            e.stopPropagation();
-            trickTarget = { col: colIdx, idx: cardIdx };
-            updateGameUI();
+            e.stopPropagation(); trickTarget = { col: colIdx, idx: cardIdx }; updateGameUI();
         }
     }
 
@@ -573,8 +601,7 @@
         if(!deck || deck.length === 0) { alert("이 덱은 모두 소진되었습니다!"); return; }
         if(!roomData[`${myRole}_hand`]) roomData[`${myRole}_hand`] = [];
         roomData[`${myRole}_hand`].push(deck.pop());
-        roomData.step = 'PLAY';
-        roomData.turn = (myRole === 'p1' ? 'p2' : 'p1');
+        roomData.step = 'PLAY'; roomData.turn = (myRole === 'p1' ? 'p2' : 'p1');
         roomRef.set(roomData);
     }
 
@@ -589,10 +616,8 @@
         if (env === 'FOG') {
             let sum = 0;
             cards.forEach(c => {
-                if (c.tType === 'JOKER') sum += 9;
-                else if (c.tType === 'SPY') sum += 7;
-                else if (c.tType === 'SHIELD') sum += 3;
-                else sum += c.value;
+                if (c.tType === 'JOKER') sum += 9; else if (c.tType === 'SPY') sum += 7;
+                else if (c.tType === 'SHIELD') sum += 3; else sum += c.value;
             });
             return 1000 + sum;
         }
@@ -627,9 +652,7 @@
         let sum = sorted.reduce((a,b)=>a+b.value, 0);
         let isFlush = sorted.every(c => c.color === sorted[0].color);
         let isStraight = true;
-        for(let i=1; i<sorted.length; i++) {
-            if (sorted[i].value !== sorted[i-1].value + 1) isStraight = false;
-        }
+        for(let i=1; i<sorted.length; i++) { if (sorted[i].value !== sorted[i-1].value + 1) isStraight = false; }
         let isTriple = sorted.every(c => c.value === sorted[0].value); 
         let maxVal = sorted[sorted.length-1].value;
 
@@ -640,24 +663,90 @@
         return 1000 + sum;                              
     }
 
+    // 💡 완벽한 자동 논리 증명(Auto-Prove) 엔진
     function recalculateAllStones() {
         let changed = false;
+        
+        ['p1', 'p2'].forEach(role => {
+            let oppRole = role === 'p1' ? 'p2' : 'p1';
+            for(let i=0; i<9; i++) {
+                if(roomData.stones[i].owner !== 'none') continue;
+                let limit = roomData.stones[i].env === 'MUD' ? 4 : 3;
+                let myC = getFieldCards(role, i);
+                let oppC = getFieldCards(oppRole, i);
+                
+                // 1. 둘 다 꽉 찼을 때 (기본 평가)
+                if(myC.length === limit && oppC.length === limit) {
+                    let s1 = getBestFormation(myC, roomData.stones[i].env);
+                    let s2 = getBestFormation(oppC, roomData.stones[i].env);
+                    if(s1 > s2) roomData.stones[i].owner = role;
+                    else if(s2 > s1) roomData.stones[i].owner = oppRole;
+                    else roomData.stones[i].owner = roomData.turn === role ? oppRole : role; 
+                    changed = true;
+                }
+                // 2. 💡 자동 논리 증명 엔진 (내가 꽉 찼고, 상대방이 3장 이하로 남았을 때 완벽한 경우의 수 탐색)
+                else if (myC.length === limit && oppC.length < limit && (limit - oppC.length <= 3)) {
+                    let myStrength = getBestFormation(myC, roomData.stones[i].env);
+                    let maxOppStrength = calculateMaxOpponentStrength(oppC, oppRole, roomData.stones[i].env, limit);
+                    
+                    // 무승부일 경우 먼저 내려놓은 쪽(role)이 승리하므로 >= 비교 성립
+                    if (myStrength >= maxOppStrength) {
+                        roomData.stones[i].owner = role;
+                        chatRef.push({ sender: 'system', text: `💡 [자동 증명] ${role==='p1'?'P1':'P2'}님의 완벽한 우위로 ${i+1}번 경계석을 자동 획득합니다!`, timestamp: Date.now() });
+                        changed = true;
+                    }
+                }
+            }
+        });
+        if(changed) checkGameWinner();
+    }
+
+    // 상대방이 남은 카드로 낼 수 있는 가장 센 경우의 수를 계산 (브루트포스)
+    function calculateMaxOpponentStrength(oppC, oppRole, env, limit) {
+        let usedCards = [];
         for(let i=0; i<9; i++) {
-            if(roomData.stones[i].owner !== 'none') continue;
-            let limit = roomData.stones[i].env === 'MUD' ? 4 : 3;
-            let p1C = getFieldCards('p1', i);
-            let p2C = getFieldCards('p2', i);
-            
-            if(p1C.length === limit && p2C.length === limit) {
-                let s1 = getBestFormation(p1C, roomData.stones[i].env);
-                let s2 = getBestFormation(p2C, roomData.stones[i].env);
-                if(s1 > s2) roomData.stones[i].owner = 'p1';
-                else if(s2 > s1) roomData.stones[i].owner = 'p2';
-                else roomData.stones[i].owner = roomData.turn === 'p1' ? 'p2' : 'p1'; 
-                changed = true;
+            usedCards.push(...getFieldCards('p1', i));
+            usedCards.push(...getFieldCards('p2', i));
+        }
+        // 상대방 손패 + 내 손패까지 사용된 카드로 간주 (가장 보수적인 계산)
+        usedCards.push(...(roomData.p1_hand || []));
+        usedCards.push(...(roomData.p2_hand || []));
+
+        let availablePool = [];
+        colors.forEach(color => {
+            for(let v=1; v<=9; v++) {
+                if(!usedCards.some(c => c.color === color && c.value === v)) availablePool.push({color, value: v});
+            }
+        });
+
+        let maxOppStrength = 0;
+        let slotsToFill = limit - oppC.length;
+
+        if (slotsToFill === 1) {
+            for(let i=0; i<availablePool.length; i++) {
+                let str = getBestFormation([...oppC, availablePool[i]], env);
+                if(str > maxOppStrength) maxOppStrength = str;
+            }
+        } 
+        else if (slotsToFill === 2) {
+            for(let i=0; i<availablePool.length; i++) {
+                for(let j=i+1; j<availablePool.length; j++) {
+                    let str = getBestFormation([...oppC, availablePool[i], availablePool[j]], env);
+                    if(str > maxOppStrength) maxOppStrength = str;
+                }
+            }
+        } 
+        else if (slotsToFill === 3) {
+            for(let i=0; i<availablePool.length; i++) {
+                for(let j=i+1; j<availablePool.length; j++) {
+                    for(let k=j+1; k<availablePool.length; k++) {
+                        let str = getBestFormation([...oppC, availablePool[i], availablePool[j], availablePool[k]], env);
+                        if(str > maxOppStrength) maxOppStrength = str;
+                    }
+                }
             }
         }
-        if(changed) checkGameWinner();
+        return maxOppStrength;
     }
 
     function checkGameWinner() {
@@ -700,7 +789,6 @@
             document.getElementById('result-screen').style.display = 'none';
             table.className = "game-table active";
             
-            // 💡 팝업을 대신하는 스마트 안내 텍스트
             let trickMsg = `🔮 속임수 발동 중: 화면의 지시를 따르세요`;
             if (activeTrick === 'TRAITOR') trickMsg = trickTarget ? `👉 훔쳐온 카드를 놓을 [나의 진영] 빈 곳을 클릭하세요.` : `👉 훔쳐올 [상대방 진영]의 카드를 클릭하세요.`;
             else if (activeTrick === 'DESERTER') trickMsg = `👉 파괴할 [상대방 진영]의 카드를 클릭하세요.`;
@@ -711,24 +799,19 @@
                 status.style.color = "#3498db";
             } else if (roomData.turn === myRole) {
                 if (activeTrick) {
-                    status.innerText = trickMsg;
-                    status.style.color = "#9b59b6";
+                    status.innerText = trickMsg; status.style.color = "#9b59b6";
                 } else if (selectedHandIndex !== null) {
                     let card = roomData[`${myRole}_hand`][selectedHandIndex];
                     if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
-                        status.innerText = "🔮 화면 가운데 [사용하기] 버튼을 누르거나, 다른 카드를 선택하세요.";
-                        status.style.color = "#9b59b6";
+                        status.innerText = "🔮 화면 가운데 [사용하기] 버튼을 누르거나, 다른 카드를 선택하세요."; status.style.color = "#9b59b6";
                     } else {
-                        status.innerText = "👆 카드를 선택했습니다. 배치할 기둥이나 경계석(숫자)을 클릭하세요!";
-                        status.style.color = "#2ecc71";
+                        status.innerText = "👆 카드를 선택했습니다. 배치할 기둥이나 경계석(숫자)을 클릭하세요!"; status.style.color = "#2ecc71";
                     }
                 } else {
-                    status.innerText = "🟢 내 차례입니다! 낼 카드를 선택하세요.";
-                    status.style.color = "#f1c40f";
+                    status.innerText = "🟢 내 차례입니다! 낼 카드를 선택하세요."; status.style.color = "#f1c40f";
                 }
             } else {
-                status.innerText = roomData.isAIMode ? "🤖 AI가 수를 고심하고 있습니다..." : "🔴 상대방 차례입니다...";
-                status.style.color = "#e74c3c";
+                status.innerText = roomData.isAIMode ? "🤖 AI가 수를 고심하고 있습니다..." : "🔴 상대방 차례입니다..."; status.style.color = "#e74c3c";
             }
         }
 
@@ -754,6 +837,10 @@
             div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} ${selectedHandIndex === idx ? 'selected' : ''}`;
             if(scoutSelection.includes(idx)) div.className += ' selected';
             if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
+            
+            // 💡 전략카드 툴팁 적용
+            if(card.desc) div.setAttribute('data-tooltip', card.desc);
+
             div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
             div.onclick = () => selectCardInHand(idx);
             handDiv.appendChild(div);
@@ -776,6 +863,7 @@
                 div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} stacked-card`;
                 div.style.setProperty('--card-idx', idx);
                 if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
+                if(card.desc) div.setAttribute('data-tooltip', card.desc); // 필드 카드 툴팁
                 div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
                 div.onclick = (e) => handleBoardCardClick(e, 'my', i, idx, card);
                 myCol.appendChild(div);
@@ -789,6 +877,7 @@
                 div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} stacked-card`;
                 div.style.setProperty('--card-idx', idx);
                 if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
+                if(card.desc) div.setAttribute('data-tooltip', card.desc); // 필드 카드 툴팁
                 div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
                 div.onclick = (e) => handleBoardCardClick(e, 'opp', i, idx, card);
                 oppCol.appendChild(div);
