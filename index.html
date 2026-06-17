@@ -30,28 +30,33 @@
         .column { flex: 1; min-height: 0; background: rgba(15, 20, 25, 0.8); border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 4px; position: relative; display: flex; flex-direction: column; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); z-index: 1; transition: 0.2s; cursor: pointer; }
         .column:hover { z-index: 100; border-color: rgba(241, 196, 15, 0.5); background: rgba(30, 40, 50, 0.9); }
 
-        /* 💡 로스트시티의 완벽한 수직 정렬 & 부채꼴 애니메이션 적용 */
-        .stacked-container { position: relative; width: 100%; flex: 1; min-height: 105px; display: flex; justify-content: center; z-index: 20; pointer-events: none; }
+        /* 💡 수직 정렬 & 부채꼴 애니메이션 완벽 구현 */
+        .stacked-container { width: 100%; flex: 1; min-height: 105px; display: flex; justify-content: center; z-index: 20; pointer-events: none; }
         .stacked-container.opp-side { align-items: flex-end; }
         .stacked-container.my-side { align-items: flex-start; }
 
-        .stacked-card { position: absolute; left: 50%; margin-left: -29px; transition: top 0.3s ease, bottom 0.3s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease; z-index: var(--card-idx); }
+        .stacked-card { 
+            position: absolute; 
+            left: 0; right: 0; margin: 0 auto; /* 완벽한 가로 중앙 정렬 */
+            transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease; 
+            z-index: var(--card-idx); 
+        }
         
-        .stacked-container.my-side .stacked-card { top: calc(var(--card-idx) * 12px); pointer-events: auto; }
-        .stacked-container.opp-side .stacked-card { bottom: calc(var(--card-idx) * 12px); pointer-events: auto; }
+        .stacked-container.my-side .stacked-card { top: calc(4px + var(--card-idx) * 20px); pointer-events: auto; }
+        .stacked-container.opp-side .stacked-card { bottom: calc(4px + var(--card-idx) * 20px); pointer-events: auto; }
 
-        /* 기둥에 마우스 올렸을 때 위아래로 쫙 펼쳐지기 */
-        .column:hover .stacked-container.my-side .stacked-card { top: calc(15px + var(--card-idx) * 32px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
-        .column:hover .stacked-container.opp-side .stacked-card { bottom: calc(15px + var(--card-idx) * 32px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+        /* 1. 기둥에 마우스를 올렸을 때 간격 벌리기 */
+        .column:hover .stacked-container.my-side .stacked-card { top: calc(15px + var(--card-idx) * 35px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+        .column:hover .stacked-container.opp-side .stacked-card { bottom: calc(15px + var(--card-idx) * 35px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
 
-        /* 특정 카드에 마우스 올렸을 때 하스스톤 스타일 팝업 및 밀어내기 */
+        /* 2. 특정 카드에 마우스를 올렸을 때 하스스톤 스타일 팝업 및 밀어내기 */
         .column .stacked-container .stacked-card:hover { transform: scale(1.3) !important; box-shadow: 0 20px 40px rgba(0,0,0,1) !important; z-index: 1000 !important; }
 
-        .stacked-container.my-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(-35px) !important; }
-        .stacked-container.my-side .stacked-card:hover ~ .stacked-card { transform: translateY(35px) !important; z-index: calc(500 - var(--card-idx)) !important; }
+        .stacked-container.my-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(-35px) scale(0.95) !important; }
+        .stacked-container.my-side .stacked-card:hover ~ .stacked-card { transform: translateY(35px) scale(0.95) !important; z-index: calc(500 - var(--card-idx)) !important; }
 
-        .stacked-container.opp-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(35px) !important; }
-        .stacked-container.opp-side .stacked-card:hover ~ .stacked-card { transform: translateY(-35px) !important; z-index: calc(500 - var(--card-idx)) !important; }
+        .stacked-container.opp-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(35px) scale(0.95) !important; }
+        .stacked-container.opp-side .stacked-card:hover ~ .stacked-card { transform: translateY(-35px) scale(0.95) !important; z-index: calc(500 - var(--card-idx)) !important; }
 
         .stone-row { display: flex; justify-content: space-between; gap: 5px; padding: 5px 12px; background: rgba(20, 30, 40, 0.8); border-radius: 8px; margin: 2px 0; }
         .stone-marker { flex: 1; height: 35px; background: #7f8c8d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #34495e; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); font-size: 16px; transition: 0.3s; position: relative; overflow: hidden; cursor: pointer; }
