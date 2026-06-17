@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>쇼텐토텐 (Schotten Totten) 디럭스</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #0d1217; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; user-select: none; }
+        #game-wrapper { width: 1400px; height: 950px; background: linear-gradient(135deg, #18232e 0%, #0d1217 100%); position: relative; display: flex; flex-direction: column; padding: 10px 20px; box-sizing: border-box; transform-origin: center center; box-shadow: 0 0 50px rgba(0,0,0,0.8); color: #fff; text-align: center; flex-shrink: 0; }
+        h1 { font-size: 24px; color: #f1c40f; text-shadow: 0 2px 10px rgba(241, 196, 15, 0.4); margin: 0 0 5px 0; }
+        
+        .info-panel { background: rgba(20, 30, 40, 0.8); color: #ecf0f1; padding: 8px 15px; border-radius: 10px; margin: 0 auto 10px auto; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .score-board { font-size: 20px; font-weight: bold; background: rgba(30, 40, 50, 0.9); color: #f1c40f; display: inline-block; padding: 6px 30px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        .main-container { flex: 1; display: flex; width: 100%; gap: 15px; min-height: 0; }
+        .game-table { flex: 3; display: flex; flex-direction: column; gap: 8px; position: relative; transition: opacity 0.3s ease; }
+        .game-table.waiting { opacity: 0.5; pointer-events: none; }
+        
+        .section { background: rgba(30, 40, 50, 0.5); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; flex: 1; }
+        .section h3 { margin: 0 0 8px 0; font-size: 14px; color: #f1c40f; text-align: left; padding-left: 5px; }
+        
+        .grid-9 { display: flex; justify-content: space-between; gap: 5px; flex: 1; min-height: 0; }
+        .column { flex: 1; min-height: 0; background: rgba(15, 20, 25, 0.8); border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 4px; position: relative; display: flex; flex-direction: column; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); z-index: 1; transition: 0.2s; cursor: pointer; }
+        .column:hover { z-index: 100; border-color: rgba(241, 196, 15, 0.5); }
+
+        .stacked-container { position: relative; width: 100%; flex: 1; min-height: 90px; display: flex; justify-content: center; z-index: 20; pointer-events: none;}
+        .stacked-container.opp-side .stacked-card { top: auto; bottom: calc(var(--card-idx) * 20px); }
+        .stacked-container.my-side .stacked-card { top: calc(var(--card-idx) * 20px); }
+        .stacked-card { position: absolute; left: 50%; margin-left: -29px; transition: top 0.3s ease, bottom 0.3s ease, transform 0.2s, box-shadow 0.2s; z-index: var(--card-idx); }
+        
+        .stone-row { display: flex; justify-content: space-between; gap: 5px; padding: 5px 12px; background: rgba(20, 30, 40, 0.8); border-radius: 8px; margin: 2px 0; }
+        .stone-marker { flex: 1; height: 35px; background: #7f8c8d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #34495e; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); font-size: 14px; transition: 0.3s; }
+        .stone-marker.p1 { background: #2ecc71; border-color: #27ae60; color: #000; box-shadow: 0 0 10px #2ecc71; }
+        .stone-marker.p2 { background: #e74c3c; border-color: #c0392b; color: #fff; box-shadow: 0 0 10px #e74c3c; }
+
+        .card-list { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 100px; padding-bottom: 10px; align-items: center; position: relative; }
+        .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: pointer; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8), inset 0 0 5px rgba(255,255,255,0.3); background-size: cover; background-position: center; background-repeat: no-repeat; image-rendering: -webkit-optimize-contrast; image-rendering: high-quality; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        
+        /* 이미지 로딩 실패 또는 없을 때를 대비한 기본 CSS 색상 */
+        .card.red { color: #ff9999; border-color: #c0392b; background-color: #c0392b; } 
+        .card.blue { color: #99ccff; border-color: #2980b9; background-color: #2980b9;} 
+        .card.green { color: #99ff99; border-color: #27ae60; background-color: #27ae60;} 
+        .card.yellow { color: #ffee99; border-color: #f39c12; background-color: #f39c12;} 
+        .card.purple { color: #d7bde2; border-color: #8e44ad; background-color: #8e44ad;}
+        .card.orange { color: #f5cba7; border-color: #d35400; background-color: #d35400;}
+
+        .card .card-num { margin: auto; font-size: 28px; font-weight: 900; }
+        .card:hover { transform: translateY(-10px) scale(1.08); box-shadow: 0 10px 20px rgba(0,0,0,1); z-index: 999 !important; }
+        .card.selected { border: 3px solid #f1c40f !important; transform: translateY(-15px) scale(1.12) !important; box-shadow: 0 15px 30px rgba(241, 196, 15, 0.5); z-index: 999 !important; }
+        
+        .chat-container { flex: 1; max-width: 350px; background: rgba(30, 40, 50, 0.6); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); padding: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.05); }
+        .chat-messages { flex: 1; overflow-y: auto; border: 1px solid rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; text-align: left; background: rgba(15, 20, 25, 0.8); font-size: 13px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; scroll-behavior: smooth; }
+        .chat-input-area { display: flex; gap: 6px; } 
+        .chat-input { flex: 1; padding: 8px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 13px; background: rgba(0,0,0,0.5); color: white; outline: none; } 
+        .chat-btn { background: #f1c40f; color: #101518; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .msg-item { padding: 6px 10px; border-radius: 8px; max-width: 85%; word-break: break-all; color: #fff; } 
+        .msg-p1 { background: #16a085; align-self: flex-start; border-bottom-left-radius: 2px; } 
+        .msg-p2 { background: #d35400; align-self: flex-start; border-bottom-left-radius: 2px; } 
+        .msg-system { background: rgba(255,255,255,0.05); color: #f1c40f; font-size: 11px; text-align: center; align-self: center; border-radius: 10px; }
+
+        .action-panel { display: none; flex-direction: column; gap: 10px; justify-content: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20, 30, 40, 0.95); padding: 20px 40px; border-radius: 15px; border: 2px solid #f1c40f; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 9999; }
+        .btn { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: white; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); } 
+        .btn:hover { transform: translateY(-2px); } .btn-play { background: #2ecc71; } .btn-prove { background: #9b59b6; }
+        
+        .result-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
+        .result-box { background: rgba(25, 35, 45, 0.95); padding: 50px 60px; border-radius: 28px; border: 3px solid #f1c40f; text-align: center; box-shadow: 0 30px 70px rgba(0,0,0,0.9); }
+        .btn-restart { background: #f1c40f; color: #0d1217; font-size: 20px; padding: 15px 45px; border-radius: 14px; cursor: pointer; font-weight: 900; border:none; margin-top: 20px;}
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <h1>⚔️ 쇼텐토텐 (Schotten Totten)</h1>
+    
+    <div class="info-panel">
+        <div id="player-role">접속 중...</div>
+        <div id="game-status" style="color: #f1c40f;">방을 생성하거나 참여하는 중입니다.</div>
+        <div id="share-url" style="font-size: 11px; color: #bdc3c7; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 4px;"></div>
+    </div>
+
+    <div id="score-area" class="score-board">나의 경계석: 0개 | 상대 경계석: 0개</div>
+
+    <div class="main-container">
+        <div id="game-table" class="game-table waiting">
+            
+            <div class="section" style="justify-content: flex-end;">
+                <h3 style="text-align:right; color:#e74c3c;">🛡️ 상대방 부족</h3>
+                <div class="grid-9" id="opp-field"></div>
+            </div>
+
+            <div class="stone-row" id="stones-row"></div>
+
+            <div class="section" style="justify-content: flex-start;">
+                <h3 style="color:#2ecc71;">⚔️ 나의 부족</h3>
+                <div class="grid-9" id="my-field"></div>
+            </div>
+
+            <div id="action-panel" class="action-panel"></div>
+
+            <div class="section" style="background: rgba(10, 15, 20, 0.6); padding: 8px; flex-direction: row; align-items: center;">
+                <button id="deck-draw-btn" class="btn" style="background: #34495e; height: 90px; margin-right: 15px;" disabled>🎴 덱<br>(<span id="deck-count">54</span>장)</button>
+                <div id="my-hand" class="card-list" style="flex:1;"></div>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <h3 style="margin: 0 0 10px 0; color:#f1c40f;">💬 무전기</h3>
+            <div id="chat-messages" class="chat-messages">
+                <div class="msg-item msg-system">서버와 연결되었습니다.</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" class="chat-input" placeholder="메시지 입력 (엔터)" onkeypress="if(event.keyCode==13) sendChatMessage()">
+                <button class="chat-btn" onclick="sendChatMessage()">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-overlay">
+        <div class="result-box">
+            <div id="final-winner-title" style="font-size: 44px; font-weight: 900; color: #fff; margin-bottom:20px;">🎉 WINNER!</div>
+            <div id="final-reason" style="font-size: 18px; color: #bdc3c7; margin-bottom: 30px;">승리 조건 달성</div>
+            <button class="btn-restart" onclick="executeServerReset()">🔄 다시 하기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ⚠️ 아래 정보를 곧 생성할 본인의 파이어베이스 설정으로 교체하세요!
+    const firebaseConfig = {
+        apiKey: "AIzaSyD5aeGP-U7E_eudovTtcFkO2H3W2agnbkI",
+        authDomain: "schotten-totten-web.firebaseapp.com",
+        databaseURL: "https://schotten-totten-web-default-rtdb.firebaseio.com",
+        projectId: "schotten-totten-web",
+        storageBucket: "schotten-totten-web.firebasestorage.app",
+        messagingSenderId: "85431663415",
+        appId: "1:85431663415:web:a3752031c347276be0f8b2",
+        measurementId: "G-CX0PKWYP4K"
+    };
+    
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const database = firebase.database();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let roomId = urlParams.get('room');
+    if (!roomId) {
+        roomId = Math.random().toString(36).substring(2, 7);
+        window.history.pushState({}, '', `?room=${roomId}`);
+    }
+
+    const roomRef = database.ref('rooms/' + roomId);
+    const chatRef = database.ref('chats/' + roomId);
+
+    const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+    let myRole = sessionStorage.getItem('st_role_' + roomId); 
+    let roomData = null;
+    let selectedHandIndex = null;
+    let selectedStoneIndex = null;
+
+    function initBoardUI() {
+        let oppHtml = '', myHtml = '', stonesHtml = '';
+        for(let i=0; i<9; i++) {
+            oppHtml += `<div class="column" id="opp-col-${i}"><div class="stacked-container opp-side" id="container-opp-${i}"></div></div>`;
+            myHtml += `<div class="column" id="my-col-${i}" onclick="selectStone(${i})"><div class="stacked-container my-side" id="container-my-${i}"></div></div>`;
+            stonesHtml += `<div class="stone-marker" id="stone-${i}">${i+1}</div>`;
+        }
+        document.getElementById('opp-field').innerHTML = oppHtml;
+        document.getElementById('my-field').innerHTML = myHtml;
+        document.getElementById('stones-row').innerHTML = stonesHtml;
+    }
+    initBoardUI();
+
+    roomRef.once('value').then((snapshot) => {
+        let currentData = snapshot.val();
+        if (currentData === null) {
+            setupNewGameInit(); 
+        } else {
+            if (!myRole) {
+                if (currentData.gameState === 'WAITING') {
+                    myRole = 'p2';
+                    sessionStorage.setItem('st_role_' + roomId, 'p2');
+                    roomRef.child('gameState').set('PLAYING');
+                    chatRef.push({ sender: 'system', text: `👤 상대방이 접속했습니다! 게임이 시작됩니다.`, timestamp: Date.now() });
+                } else {
+                    alert("이미 게임이 진행중인 방입니다."); return;
+                }
+            }
+        }
+        document.getElementById('player-role').innerText = `당신은 [Player ${myRole === 'p1' ? '1 (방장)' : '2 (참가자)'}] 입니다.`;
+        document.getElementById('share-url').innerText = `초대 링크: ${window.location.origin}${window.location.pathname}?room=${roomId}`;
+
+        roomRef.on('value', (snap) => {
+            roomData = snap.val();
+            if(roomData) updateGameUI();
+        });
+
+        chatRef.limitToLast(20).on('child_added', (snapshot) => {
+            const data = snapshot.val();
+            const div = document.getElementById('chat-messages');
+            const msgEl = document.createElement('div');
+            msgEl.className = data.sender === 'system' ? 'msg-item msg-system' : `msg-item msg-${data.sender}`;
+            msgEl.innerText = data.sender === 'system' ? data.text : `${data.sender === 'p1' ? 'P1' : 'P2'}: ${data.text}`;
+            div.appendChild(msgEl);
+            
+            // 채팅 부드럽게 자동 스크롤
+            requestAnimationFrame(() => {
+                div.scrollTop = div.scrollHeight;
+            });
+        });
+    });
+
+    function setupNewGameInit() {
+        myRole = 'p1';
+        sessionStorage.setItem('st_role_' + roomId, 'p1');
+        let newRoom = {
+            gameState: 'WAITING', turn: 'p1', 
+            deck: createShuffledDeck(),
+            stones: Array(9).fill('none'), 
+            p1_field: Array(9).fill([]), p2_field: Array(9).fill([]),
+            p1_hand: [], p2_hand: []
+        };
+        for(let i=0; i<6; i++) {
+            newRoom.p1_hand.push(newRoom.deck.pop());
+            newRoom.p2_hand.push(newRoom.deck.pop());
+        }
+        roomRef.set(newRoom);
+        chatRef.push({ sender: 'system', text: `🏠 방이 생성되었습니다. 링크를 공유하세요.`, timestamp: Date.now() });
+    }
+
+    function createShuffledDeck() {
+        let deck = [];
+        colors.forEach(color => {
+            for(let i=1; i<=9; i++) {
+                deck.push({ 
+                    color: color, 
+                    value: i,
+                    // 나중에 이미지를 넣을 경로 설정 (예: images/red_1.png)
+                    img: `images/${color}_${i}.png` 
+                });
+            }
+        });
+        return deck.sort(() => Math.random() - 0.5);
+    }
+
+    function selectCardInHand(index) {
+        if(roomData.turn !== myRole) return;
+        selectedHandIndex = index;
+        updateGameUI();
+    }
+
+    function selectStone(index) {
+        if(roomData.turn !== myRole) return;
+        if(roomData.stones[index] !== 'none') { alert("이미 점령된 경계석입니다."); return; }
+        
+        selectedStoneIndex = index;
+        let myCardsCount = (roomData[`${myRole}_field`][index] || []).length;
+        
+        let actionPanel = document.getElementById('action-panel');
+        actionPanel.innerHTML = '';
+        
+        let hasAction = false;
+
+        if(selectedHandIndex !== null && myCardsCount < 3) {
+            actionPanel.innerHTML += `<button class="btn btn-play" onclick="executePlay()">⛳ 선택한 카드 배치</button>`;
+            hasAction = true;
+        }
+
+        if(myCardsCount === 3) {
+            actionPanel.innerHTML += `<button class="btn btn-prove" onclick="executeClaimProve()">🔍 논리적 증명 및 점령</button>`;
+            hasAction = true;
+        }
+
+        actionPanel.innerHTML += `<button class="btn" style="background:#e74c3c;" onclick="cancelSelection()">취소</button>`;
+
+        if(!hasAction) {
+            alert("먼저 손에서 카드를 선택하거나, 3장이 채워진 돌을 클릭하세요.");
+            cancelSelection();
+            return;
+        }
+
+        actionPanel.style.display = 'flex';
+    }
+
+    function cancelSelection() {
+        selectedHandIndex = null;
+        selectedStoneIndex = null;
+        document.getElementById('action-panel').style.display = 'none';
+        updateGameUI();
+    }
+
+    function executePlay() {
+        if(selectedHandIndex === null || selectedStoneIndex === null) return;
+        
+        let hand = roomData[`${myRole}_hand`];
+        let card = hand.splice(selectedHandIndex, 1)[0];
+        
+        let myField = roomData[`${myRole}_field`];
+        let targetCol = myField[selectedStoneIndex] || [];
+        targetCol.push(card);
+        myField[selectedStoneIndex] = targetCol;
+
+        let oppRole = myRole === 'p1' ? 'p2' : 'p1';
+        let oppField = roomData[`${oppRole}_field`];
+        
+        if(targetCol.length === 3 && (oppField[selectedStoneIndex] || []).length === 3) {
+            let myStrength = evaluateFormation(targetCol);
+            let oppStrength = evaluateFormation(oppField[selectedStoneIndex]);
+            
+            if(myStrength > oppStrength) { roomData.stones[selectedStoneIndex] = myRole; } 
+            else { roomData.stones[selectedStoneIndex] = oppRole; }
+        }
+
+        if(roomData.deck && roomData.deck.length > 0) {
+            hand.push(roomData.deck.pop());
+        }
+
+        roomData.turn = oppRole;
+        selectedHandIndex = null;
+        selectedStoneIndex = null;
+        document.getElementById('action-panel').style.display = 'none';
+        
+        checkGameWinner();
+        roomRef.set(roomData);
+    }
+
+    function executeClaimProve() {
+        if (selectedStoneIndex === null) return;
+        let myField = roomData[`${myRole}_field`][selectedStoneIndex] || [];
+        if (myField.length < 3) return;
+
+        let myStrength = evaluateFormation(myField);
+        let oppRole = myRole === 'p1' ? 'p2' : 'p1';
+        let oppField = roomData[`${oppRole}_field`][selectedStoneIndex] || [];
+
+        let usedCards = [];
+        for(let i=0; i<9; i++) {
+            usedCards.push(...(roomData.p1_field[i] || []));
+            usedCards.push(...(roomData.p2_field[i] || []));
+        }
+        usedCards.push(...(roomData[`${myRole}_hand`] || []));
+
+        let availablePool = [];
+        colors.forEach(color => {
+            for(let v=1; v<=9; v++) {
+                let isUsed = usedCards.some(c => c.color === color && c.value === v);
+                if(!isUsed) availablePool.push({color, value: v});
+            }
+        });
+
+        let maxOppStrength = 0;
+        let slotsToFill = 3 - oppField.length;
+
+        if (slotsToFill === 0) { maxOppStrength = evaluateFormation(oppField); } 
+        else if (slotsToFill === 1) {
+            for(let i=0; i<availablePool.length; i++) {
+                let str = evaluateFormation([...oppField, availablePool[i]]);
+                if(str > maxOppStrength) maxOppStrength = str;
+            }
+        } 
+        else if (slotsToFill === 2) {
+            for(let i=0; i<availablePool.length; i++) {
+                for(let j=i+1; j<availablePool.length; j++) {
+                    let str = evaluateFormation([...oppField, availablePool[i], availablePool[j]]);
+                    if(str > maxOppStrength) maxOppStrength = str;
+                }
+            }
+        } 
+        else if (slotsToFill === 3) {
+            for(let i=0; i<availablePool.length; i++) {
+                for(let j=i+1; j<availablePool.length; j++) {
+                    for(let k=j+1; k<availablePool.length; k++) {
+                        let str = evaluateFormation([availablePool[i], availablePool[j], availablePool[k]]);
+                        if(str > maxOppStrength) maxOppStrength = str;
+                    }
+                }
+            }
+        }
+
+        if (myStrength >= maxOppStrength) {
+            chatRef.push({ sender: 'system', text: `🚨 Player ${myRole === 'p1'? '1' : '2'}님이 ${selectedStoneIndex+1}번 경계석의 승리를 완벽히 증명하고 가져갑니다!`, timestamp: Date.now() });
+            roomData.stones[selectedStoneIndex] = myRole;
+            checkGameWinner();
+            roomRef.set(roomData);
+        } else {
+            alert("❌ 증명 실패. 상대방이 남은 카드를 조합해 역전할 가능성이 아직 남아있습니다.");
+        }
+        cancelSelection();
+    }
+
+    function evaluateFormation(cards) {
+        let sorted = [...cards].sort((a, b) => a.value - b.value);
+        let isFlush = (sorted[0].color === sorted[1].color && sorted[1].color === sorted[2].color);
+        let isStraight = (sorted[0].value + 1 === sorted[1].value && sorted[1].value + 1 === sorted[2].value);
+        let isTriple = (sorted[0].value === sorted[1].value && sorted[1].value === sorted[2].value);
+        let sum = sorted[0].value + sorted[1].value + sorted[2].value;
+        let maxVal = sorted[2].value;
+
+        if(isFlush && isStraight) return 5000 + maxVal; 
+        if(isTriple) return 4000 + sorted[0].value;     
+        if(isFlush) return 3000 + maxVal;               
+        if(isStraight) return 2000 + maxVal;            
+        return 1000 + sum;                              
+    }
+
+    function checkGameWinner() {
+        let stones = roomData.stones;
+        let p1Count = 0, p2Count = 0;
+        let p1Consecutive = 0, p2Consecutive = 0;
+        let maxP1Cons = 0, maxP2Cons = 0;
+
+        for(let i=0; i<9; i++) {
+            if(stones[i] === 'p1') { p1Count++; p1Consecutive++; p2Consecutive = 0; }
+            else if(stones[i] === 'p2') { p2Count++; p2Consecutive++; p1Consecutive = 0; }
+            else { p1Consecutive = 0; p2Consecutive = 0; }
+            
+            if(p1Consecutive > maxP1Cons) maxP1Cons = p1Consecutive;
+            if(p2Consecutive > maxP2Cons) maxP2Cons = p2Consecutive;
+        }
+
+        if(p1Count >= 5 || maxP1Cons >= 3) triggerGameOver('p1', maxP1Cons >= 3 ? '인접한 경계석 3개 점령' : '경계석 총 5개 점령');
+        else if(p2Count >= 5 || maxP2Cons >= 3) triggerGameOver('p2', maxP2Cons >= 3 ? '인접한 경계석 3개 점령' : '경계석 총 5개 점령');
+    }
+
+    function triggerGameOver(winner, reason) {
+        roomData.gameState = 'GAME_OVER';
+        roomData.winner = winner;
+        roomData.winReason = reason;
+    }
+
+    function updateGameUI() {
+        const table = document.getElementById('game-table');
+        const status = document.getElementById('game-status');
+        
+        if (roomData.gameState === 'WAITING') {
+            status.innerText = "⏳ 2P를 기다리는 중입니다...";
+            table.className = "game-table waiting"; return;
+        }
+        
+        if (roomData.gameState === 'GAME_OVER') {
+            table.className = "game-table waiting";
+            document.getElementById('result-screen').style.display = 'flex';
+            let isMyWin = roomData.winner === myRole;
+            document.getElementById('final-winner-title').innerText = isMyWin ? "🎉 승리했습니다!" : "💀 패배했습니다.";
+            document.getElementById('final-winner-title').style.color = isMyWin ? "#2ecc71" : "#e74c3c";
+            document.getElementById('final-reason').innerText = `이유: ${roomData.winReason}`;
+        } else {
+            document.getElementById('result-screen').style.display = 'none';
+            table.className = "game-table active";
+            status.innerText = roomData.turn === myRole ? "🟢 내 차례입니다! 카드를 선택하고 경계석을 누르세요." : "🔴 상대방 차례입니다...";
+        }
+
+        document.getElementById('deck-count').innerText = roomData.deck ? roomData.deck.length : 0;
+
+        const handDiv = document.getElementById('my-hand');
+        handDiv.innerHTML = '';
+        let myHand = roomData[`${myRole}_hand`] || [];
+        myHand.forEach((card, idx) => {
+            let div = document.createElement('div');
+            div.className = `card ${card.color} ${selectedHandIndex === idx ? 'selected' : ''}`;
+            
+            // 이미지가 있으면 이미지를 적용 (없으면 CSS 색상이 기본으로 표시됨)
+            div.style.backgroundImage = `url('${card.img}')`; 
+            
+            // 이미지 없이도 숫자가 보이게 설정 (나중에 이미지를 넣으면 안의 숫자를 지우거나 숨기시면 됩니다)
+            div.innerHTML = `<div class="card-num">${card.value}</div>`;
+            div.onclick = () => selectCardInHand(idx);
+            handDiv.appendChild(div);
+        });
+
+        let oppRole = myRole === 'p1' ? 'p2' : 'p1';
+        let myScore = 0, oppScore = 0;
+
+        for(let i=0; i<9; i++) {
+            let stoneEl = document.getElementById(`stone-${i}`);
+            let owner = roomData.stones[i];
+            stoneEl.className = 'stone-marker';
+            if(owner === myRole) { stoneEl.classList.add('p1'); myScore++; }
+            else if(owner === oppRole) { stoneEl.classList.add('p2'); oppScore++; }
+            
+            let myCol = document.getElementById(`container-my-${i}`);
+            myCol.innerHTML = '';
+            let myCards = roomData[`${myRole}_field`][i] || [];
+            myCards.forEach((card, idx) => {
+                let div = document.createElement('div');
+                div.className = `card ${card.color} stacked-card`;
+                div.style.setProperty('--card-idx', idx);
+                div.style.backgroundImage = `url('${card.img}')`; 
+                div.innerHTML = `<div class="card-num">${card.value}</div>`;
+                myCol.appendChild(div);
+            });
+
+            let oppCol = document.getElementById(`container-opp-${i}`);
+            oppCol.innerHTML = '';
+            let oppCards = roomData[`${oppRole}_field`][i] || [];
+            oppCards.forEach((card, idx) => {
+                let div = document.createElement('div');
+                div.className = `card ${card.color} stacked-card`;
+                div.style.setProperty('--card-idx', idx);
+                div.style.backgroundImage = `url('${card.img}')`; 
+                div.innerHTML = `<div class="card-num">${card.value}</div>`;
+                oppCol.appendChild(div);
+            });
+        }
+        document.getElementById('score-area').innerText = `나의 경계석: ${myScore}개 | 상대 경계석: ${oppScore}개`;
+    }
+
+    function sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        if(!input.value.trim()) return;
+        chatRef.push({ sender: myRole, text: input.value, timestamp: Date.now() });
+        input.value = '';
+    }
+
+    function executeServerReset() {
+        setupNewGameInit();
+    }
+</script>
+</body>
+</html>
