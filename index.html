@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>쇼텐토텐 (Schotten Totten) 디럭스</title>
+    <title>쇼텐토텐 (Schotten Totten) 확장판 & AI</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -11,15 +11,17 @@
         #game-wrapper { width: 1400px; height: 950px; background: linear-gradient(135deg, #18232e 0%, #0d1217 100%); position: relative; display: flex; flex-direction: column; padding: 10px 20px; box-sizing: border-box; transform-origin: center center; box-shadow: 0 0 50px rgba(0,0,0,0.8); color: #fff; text-align: center; flex-shrink: 0; }
         h1 { font-size: 24px; color: #f1c40f; text-shadow: 0 2px 10px rgba(241, 196, 15, 0.4); margin: 0 0 5px 0; }
         
-        .info-panel { background: rgba(20, 30, 40, 0.8); color: #ecf0f1; padding: 8px 15px; border-radius: 10px; margin: 0 auto 10px auto; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
-        .score-board { font-size: 20px; font-weight: bold; background: rgba(30, 40, 50, 0.9); color: #f1c40f; display: inline-block; padding: 6px 30px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); }
-        
+        .info-panel { background: rgba(20, 30, 40, 0.8); color: #ecf0f1; padding: 6px 15px; border-radius: 10px; margin: 0 auto 5px auto; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .score-board { font-size: 20px; font-weight: bold; background: rgba(30, 40, 50, 0.9); color: #f1c40f; display: inline-block; padding: 4px 30px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); }
+        .ai-mode-btn { background: #e74c3c; color: white; border: none; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); transition: 0.2s; }
+        .ai-mode-btn:hover { background: #c0392b; transform: translateY(-1px); }
+
         .main-container { flex: 1; display: flex; width: 100%; gap: 15px; min-height: 0; }
-        .game-table { flex: 3; display: flex; flex-direction: column; gap: 8px; position: relative; transition: opacity 0.3s ease; }
+        .game-table { flex: 3; display: flex; flex-direction: column; gap: 5px; position: relative; transition: opacity 0.3s ease; }
         .game-table.waiting { opacity: 0.5; pointer-events: none; }
         
-        .section { background: rgba(30, 40, 50, 0.5); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; flex: 1; }
-        .section h3 { margin: 0 0 8px 0; font-size: 14px; color: #f1c40f; text-align: left; padding-left: 5px; }
+        .section { background: rgba(30, 40, 50, 0.5); padding: 5px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; flex: 1; position: relative; }
+        .section h3 { margin: 0 0 5px 0; font-size: 14px; color: #f1c40f; text-align: left; padding-left: 5px; }
         
         .grid-9 { display: flex; justify-content: space-between; gap: 5px; flex: 1; min-height: 0; }
         .column { flex: 1; min-height: 0; background: rgba(15, 20, 25, 0.8); border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 4px; position: relative; display: flex; flex-direction: column; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); z-index: 1; transition: 0.2s; cursor: pointer; }
@@ -27,58 +29,63 @@
 
         .stacked-container { position: relative; width: 100%; flex: 1; min-height: 90px; display: flex; justify-content: center; z-index: 20; pointer-events: none;}
         .stacked-container.opp-side .stacked-card { top: auto; bottom: calc(var(--card-idx) * 20px); }
-        .stacked-container.my-side .stacked-card { top: calc(var(--card-idx) * 20px); }
+        .stacked-container.my-side .stacked-card { top: calc(var(--card-idx) * 20px); pointer-events: auto; }
         .stacked-card { position: absolute; left: 50%; margin-left: -29px; transition: top 0.3s ease, bottom 0.3s ease, transform 0.2s, box-shadow 0.2s; z-index: var(--card-idx); }
         
         .stone-row { display: flex; justify-content: space-between; gap: 5px; padding: 5px 12px; background: rgba(20, 30, 40, 0.8); border-radius: 8px; margin: 2px 0; }
-        .stone-marker { flex: 1; height: 35px; background: #7f8c8d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #34495e; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); font-size: 14px; transition: 0.3s; }
+        .stone-marker { flex: 1; height: 35px; background: #7f8c8d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #34495e; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); font-size: 14px; transition: 0.3s; position: relative; overflow: hidden;}
         .stone-marker.p1 { background: #2ecc71; border-color: #27ae60; color: #000; box-shadow: 0 0 10px #2ecc71; }
         .stone-marker.p2 { background: #e74c3c; border-color: #c0392b; color: #fff; box-shadow: 0 0 10px #e74c3c; }
+        .env-mud { border-bottom: 6px solid #8d6e63 !important; }
+        .env-fog { border-bottom: 6px solid #9e9e9e !important; }
 
-        .card-list { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 100px; padding-bottom: 10px; align-items: center; position: relative; }
-        .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: pointer; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8), inset 0 0 5px rgba(255,255,255,0.3); background-size: cover; background-position: center; background-repeat: no-repeat; image-rendering: -webkit-optimize-contrast; image-rendering: high-quality; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card-list { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 95px; padding-bottom: 5px; align-items: center; position: relative; }
+        .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: pointer; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8); background-size: cover; background-position: center; transition: transform 0.2s ease; image-rendering: high-quality; }
         
-        .card.red { color: #ff9999; border-color: #c0392b; background-color: #c0392b; } 
-        .card.blue { color: #99ccff; border-color: #2980b9; background-color: #2980b9;} 
-        .card.green { color: #99ff99; border-color: #27ae60; background-color: #27ae60;} 
-        .card.yellow { color: #ffee99; border-color: #f39c12; background-color: #f39c12;} 
-        .card.purple { color: #d7bde2; border-color: #8e44ad; background-color: #8e44ad;}
-        .card.orange { color: #f5cba7; border-color: #d35400; background-color: #d35400;}
+        .card.red { color: #ff9999; background-color: #c0392b; } 
+        .card.blue { color: #99ccff; background-color: #2980b9;} 
+        .card.green { color: #99ff99; background-color: #27ae60;} 
+        .card.yellow { color: #ffee99; background-color: #f39c12;} 
+        .card.purple { color: #d7bde2; background-color: #8e44ad;}
+        .card.white { color: #ffffff; background-color: #ecf0f1; border-color: #bdc3c7;} 
+        
+        .card.tactic { background-color: #2c3e50; border: 2px solid #9b59b6; color: #f1c40f; }
+        .card-back-clan { background: repeating-linear-gradient(45deg, #795548, #795548 8px, #5D4037 8px, #5D4037 16px) !important; border-color: #3e2723 !important; }
+        .card-back-tactic { background: repeating-linear-gradient(45deg, #8e44ad, #8e44ad 8px, #732d91 8px, #732d91 16px) !important; border-color: #4a235a !important; }
 
-        .card .card-num { margin: auto; font-size: 28px; font-weight: 900; }
-        .card:hover { transform: translateY(-10px) scale(1.08); box-shadow: 0 10px 20px rgba(0,0,0,1); z-index: 999 !important; }
-        .card.selected { border: 3px solid #f1c40f !important; transform: translateY(-15px) scale(1.12) !important; box-shadow: 0 15px 30px rgba(241, 196, 15, 0.5); z-index: 999 !important; }
+        .card .card-num { margin: auto; font-size: 28px; font-weight: 900; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;}
+        .card.tactic .card-num { font-size: 14px; text-align: center; line-height: 1.2; padding: 2px;}
+        .card:hover { transform: translateY(-10px) scale(1.08); z-index: 999 !important; }
+        .card.selected { border: 3px solid #f1c40f !important; transform: translateY(-15px) scale(1.12) !important; z-index: 999 !important; }
         
-        .chat-container { flex: 1; max-width: 350px; background: rgba(30, 40, 50, 0.6); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); padding: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.05); }
-        .chat-messages { flex: 1; overflow-y: auto; border: 1px solid rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; text-align: left; background: rgba(15, 20, 25, 0.8); font-size: 13px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; scroll-behavior: smooth; }
+        .chat-container { flex: 1; max-width: 350px; background: rgba(30, 40, 50, 0.6); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); padding: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .chat-messages { flex: 1; overflow-y: auto; border: 1px solid rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; text-align: left; background: rgba(15, 20, 25, 0.8); font-size: 13px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
         .chat-input-area { display: flex; gap: 6px; } 
-        .chat-input { flex: 1; padding: 8px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 13px; background: rgba(0,0,0,0.5); color: white; outline: none; } 
-        .chat-btn { background: #f1c40f; color: #101518; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .msg-item { padding: 6px 10px; border-radius: 8px; max-width: 85%; word-break: break-all; color: #fff; } 
+        .chat-input { flex: 1; padding: 8px; border-radius: 6px; font-size: 13px; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.1); } 
+        .chat-btn { background: #f1c40f; color: #101518; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .msg-item { padding: 6px 10px; border-radius: 8px; max-width: 85%; color: #fff; } 
         .msg-p1 { background: #16a085; align-self: flex-start; border-bottom-left-radius: 2px; } 
         .msg-p2 { background: #d35400; align-self: flex-start; border-bottom-left-radius: 2px; } 
         .msg-system { background: rgba(255,255,255,0.05); color: #f1c40f; font-size: 11px; text-align: center; align-self: center; border-radius: 10px; }
 
         .action-panel { display: none; flex-direction: column; gap: 10px; justify-content: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20, 30, 40, 0.95); padding: 20px 40px; border-radius: 15px; border: 2px solid #f1c40f; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 9999; }
-        .btn { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: white; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); } 
-        .btn:hover { transform: translateY(-2px); } .btn-play { background: #2ecc71; } .btn-prove { background: #9b59b6; }
+        .btn { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: white; transition: 0.2s; } 
+        .btn:hover { transform: translateY(-2px); } .btn-play { background: #2ecc71; } .btn-trick { background: #9b59b6; }
         
-        .result-overlay, .ai-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
-        .result-box { background: rgba(25, 35, 45, 0.95); padding: 50px 60px; border-radius: 28px; border: 3px solid #f1c40f; text-align: center; box-shadow: 0 30px 70px rgba(0,0,0,0.9); }
+        .result-overlay, .draw-overlay, .ai-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
+        .result-box { background: rgba(25, 35, 45, 0.95); padding: 50px 60px; border-radius: 28px; border: 3px solid #f1c40f; text-align: center; }
         .btn-restart { background: #f1c40f; color: #0d1217; font-size: 20px; padding: 15px 45px; border-radius: 14px; cursor: pointer; font-weight: 900; border:none; margin-top: 20px;}
-        .ai-mode-btn { background: #e74c3c; color: white; border: none; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
 <div id="game-wrapper">
-    <h1>⚔️ 쇼텐토텐 (Schotten Totten)</h1>
+    <h1>⚔️ 쇼텐토텐 (Schotten Totten) 확장판 & AI</h1>
     
     <div class="info-panel">
         <div id="player-role">접속 중...</div>
         <div id="game-status" style="color: #f1c40f;">방을 생성하거나 참여하는 중입니다.</div>
         <div id="share-url" style="font-size: 11px; color: #bdc3c7; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 4px;"></div>
-        <!-- 🤖 AI 모드 버튼 추가 -->
         <button id="ai-start-btn" class="ai-mode-btn" onclick="openAIModal()">🤖 AI와 대전하기</button>
     </div>
 
@@ -87,22 +94,27 @@
     <div class="main-container">
         <div id="game-table" class="game-table waiting">
             
+            <div style="display: flex; justify-content: center; gap: 5px; min-height: 50px;" id="opp-hand-area"></div>
+
             <div class="section" style="justify-content: flex-end;">
-                <h3 style="text-align:right; color:#e74c3c;">🛡️ 상대방 부족</h3>
+                <h3 style="text-align:right; color:#e74c3c;">🛡️ 상대방 진영</h3>
                 <div class="grid-9" id="opp-field"></div>
             </div>
 
             <div class="stone-row" id="stones-row"></div>
 
             <div class="section" style="justify-content: flex-start;">
-                <h3 style="color:#2ecc71;">⚔️ 나의 부족</h3>
+                <h3 style="color:#2ecc71;">⚔️ 나의 진영</h3>
                 <div class="grid-9" id="my-field"></div>
             </div>
 
             <div id="action-panel" class="action-panel"></div>
 
             <div class="section" style="background: rgba(10, 15, 20, 0.6); padding: 8px; flex-direction: row; align-items: center;">
-                <button id="deck-draw-btn" class="btn" style="background: #34495e; height: 90px; margin-right: 15px;" disabled>🎴 덱<br>(<span id="deck-count">54</span>장)</button>
+                <div style="display: flex; flex-direction: column; gap: 5px; margin-right: 15px;">
+                    <div style="background: #5D4037; border: 2px solid #3e2723; border-radius: 6px; padding: 10px; text-align: center; font-size: 12px; font-weight: bold;">부대덱<br><span id="deck-clan-count">54</span></div>
+                    <div style="background: #732d91; border: 2px solid #4a235a; border-radius: 6px; padding: 10px; text-align: center; font-size: 12px; font-weight: bold;">전략덱<br><span id="deck-tactic-count">10</span></div>
+                </div>
                 <div id="my-hand" class="card-list" style="flex:1;"></div>
             </div>
         </div>
@@ -119,17 +131,26 @@
         </div>
     </div>
 
-    <!-- 🤖 AI 난이도 선택 모달 추가 -->
+    <!-- AI 난이도 모달 -->
     <div id="ai-select-screen" class="ai-modal-overlay">
         <div class="result-box">
-            <div class="result-title" style="font-size: 32px; font-weight:900; color: #fff; margin-bottom:15px;">🤖 AI 난이도 선택</div>
-            <div style="font-size: 16px; margin-bottom: 30px; color: #bdc3c7;">상대할 인공지능의 수준을 선택해 주세요.</div>
+            <div style="font-size: 32px; font-weight:900; color: #fff; margin-bottom:15px;">🤖 AI 난이도 선택</div>
+            <div style="font-size: 16px; margin-bottom: 30px; color: #bdc3c7;">확장판 AI는 부대 카드와 환경 카드 위주로 전략을 짭니다.</div>
             <div style="display: flex; gap: 15px; justify-content: center;">
-                <button class="btn btn-play" onclick="executeAIStart('EASY')">🟢 초급</button>
-                <button class="btn" style="background:#f39c12;" onclick="executeAIStart('NORMAL')">🟡 중급</button>
-                <button class="btn" style="background:#e74c3c;" onclick="executeAIStart('HARD')">🔴 고급</button>
+                <button class="btn btn-play" onclick="executeAIStart('EASY')">🟢 연습 (EASY)</button>
+                <button class="btn" style="background:#e74c3c;" onclick="executeAIStart('HARD')">🔴 실전 (HARD)</button>
             </div>
             <button class="btn" style="margin-top:25px; background:transparent; border:1px solid rgba(255,255,255,0.3);" onclick="closeAIModal()">돌아가기</button>
+        </div>
+    </div>
+
+    <div id="draw-overlay" class="draw-overlay">
+        <div class="result-box" style="padding: 30px;">
+            <h2 style="color: #fff; margin-top:0;">🎴 카드를 뽑아 턴을 종료하세요</h2>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-play" onclick="drawCard('clan')">⚔️ 부대 덱에서 뽑기</button>
+                <button class="btn btn-trick" onclick="drawCard('tactic')">📜 전략 덱에서 뽑기</button>
+            </div>
         </div>
     </div>
 
@@ -143,7 +164,6 @@
 </div>
 
 <script>
-    // ⚠️ 파이어베이스 설정을 유지하세요!
     const firebaseConfig = {
       apiKey: "AIzaSyD5aeGP-U7E_eudovTtcFkO2H3W2agnbkI",
       authDomain: "schotten-totten-web.firebaseapp.com",
@@ -168,11 +188,13 @@
     const roomRef = database.ref('rooms/' + roomId);
     const chatRef = database.ref('chats/' + roomId);
 
-    const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+    const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'white'];
     let myRole = sessionStorage.getItem('st_role_' + roomId); 
     let roomData = null;
     let selectedHandIndex = null;
-    let selectedStoneIndex = null;
+    let activeTrick = null; 
+    let trickTarget = null;
+    let scoutSelection = [];
 
     function initBoardUI() {
         let oppHtml = '', myHtml = '', stonesHtml = '';
@@ -199,9 +221,7 @@
                     roomRef.child('p2_online').set(true);
                     roomRef.child('gameState').set('PLAYING');
                     chatRef.push({ sender: 'system', text: `👤 상대방이 접속했습니다! 게임이 시작됩니다.`, timestamp: Date.now() });
-                } else {
-                    alert("이미 게임이 진행중인 방입니다."); return;
-                }
+                } else { alert("방이 꽉 찼거나 AI 모드 진행 중입니다."); return; }
             } else {
                 roomRef.child(myRole + '_online').set(true);
             }
@@ -213,7 +233,7 @@
             roomData = snap.val();
             if(roomData) {
                 updateGameUI();
-                checkAndRunAI(); // AI 턴인지 확인
+                checkAndRunAI(); 
             }
         });
 
@@ -224,21 +244,13 @@
             msgEl.className = data.sender === 'system' ? 'msg-item msg-system' : `msg-item msg-${data.sender}`;
             msgEl.innerText = data.sender === 'system' ? data.text : `${data.sender === 'p1' ? 'P1' : 'P2'}: ${data.text}`;
             div.appendChild(msgEl);
-            
             requestAnimationFrame(() => { div.scrollTop = div.scrollHeight; });
         });
     });
 
-    // 🤖 AI 모달 열기/닫기
-    function openAIModal() {
-        if(!roomData) return;
-        document.getElementById('ai-select-screen').style.display = 'flex';
-    }
-    function closeAIModal() {
-        document.getElementById('ai-select-screen').style.display = 'none';
-    }
-
-    // 🤖 AI 시작 실행
+    function openAIModal() { if(roomData) document.getElementById('ai-select-screen').style.display = 'flex'; }
+    function closeAIModal() { document.getElementById('ai-select-screen').style.display = 'none'; }
+    
     function executeAIStart(difficulty) {
         document.getElementById('ai-select-screen').style.display = 'none';
         roomData.p2_online = true; 
@@ -246,343 +258,371 @@
         roomData.aiDifficulty = difficulty; 
         roomData.gameState = 'PLAYING';
         roomRef.set(roomData);
-        
-        let diffLabel = difficulty === 'EASY' ? '🟢 초급' : (difficulty === 'HARD' ? '🔴 고급' : '🟡 중급');
-        chatRef.push({ sender: 'system', text: `🤖 인공지능(${diffLabel}) 부족이 등판했습니다. 당신의 선공입니다!`, timestamp: Date.now() });
+        chatRef.push({ sender: 'system', text: `🤖 인공지능(${difficulty}) 활성화! 방장님의 선공입니다.`, timestamp: Date.now() });
     }
 
-    // 🤖 AI 동작 트리거
     function checkAndRunAI() {
         if (myRole === 'p1' && roomData && roomData.isAIMode && roomData.gameState === 'PLAYING' && roomData.turn === 'p2') {
-            setTimeout(runAIIntelligence, 1200); // 1.2초 고민하는 척
+            if(roomData.step === 'PLAY' || roomData.step === 'SCOUT_RETURN' || roomData.step === 'DRAW') {
+                setTimeout(runAIIntelligence, 1200); 
+            }
         }
     }
 
-    // 🤖 핵심 AI 알고리즘
     function runAIIntelligence() {
         if(roomData.turn !== 'p2' || roomData.gameState !== 'PLAYING') return;
         const aiHand = roomData.p2_hand || [];
         if(aiHand.length === 0) return;
 
-        // 1. [논리적 증명 및 점령] 먼저 확인
-        for(let i=0; i<9; i++) {
-            if(roomData.stones[i] === 'none' && (roomData.p2_field[i] || []).length === 3) {
-                if(aiTryProve(i)) {
-                    // 증명에 성공했으면 데이터를 세팅하고 한 턴 종료로 취급 (카드 보충 등 스킵)
-                    return; 
+        if (roomData.step === 'SCOUT_RETURN') {
+            for(let i=0; i<2; i++) {
+                if (aiHand.length > 0) {
+                    let returned = aiHand.pop();
+                    if(roomData.clanDeck) roomData.clanDeck.unshift(returned);
                 }
             }
+            roomData.turn = 'p1'; roomData.step = 'PLAY';
+            roomRef.set(roomData); return;
         }
 
-        // 2. 카드 배치 고민하기
-        let bestPlay = { handIdx: -1, stoneIdx: -1, score: -999 };
-        const diff = roomData.aiDifficulty || 'NORMAL';
+        if (roomData.step === 'DRAW') {
+            let drawTactic = Math.random() < 0.2 && roomData.tacticsDeck && roomData.tacticsDeck.length > 0;
+            if(drawTactic) { roomData.p2_hand.push(roomData.tacticsDeck.pop()); } 
+            else if (roomData.clanDeck && roomData.clanDeck.length > 0) { roomData.p2_hand.push(roomData.clanDeck.pop()); }
+            
+            roomData.step = 'PLAY'; roomData.turn = 'p1';
+            roomRef.set(roomData); return;
+        }
+
+        let bestPlay = { handIdx: -1, stoneIdx: -1, score: -999, isEnv: false };
+        let myCount = roomData.p2_tactics_count || 0;
+        let oppCount = roomData.p1_tactics_count || 0;
+        let canPlayTactic = myCount < oppCount + 1;
 
         for(let h=0; h<aiHand.length; h++) {
             let card = aiHand[h];
+            if (card.type === 'tactic' && !canPlayTactic) continue;
+            if (['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) continue; 
+
             for(let s=0; s<9; s++) {
-                if(roomData.stones[s] !== 'none') continue; // 이미 먹힌 돌 패스
-                let currentField = roomData.p2_field[s] || [];
-                if(currentField.length >= 3) continue; // 꽉 찬 돌 패스
-
-                let score = card.value;
-                if(diff !== 'EASY') { // 중급/고급은 깔린 카드와 비교 (플러시, 스트레이트 노리기)
-                    if(currentField.length > 0) {
-                        let colorMatch = currentField.every(c => c.color === card.color);
-                        if(colorMatch) score += 30; 
-                        let isAdj = currentField.some(c => Math.abs(c.value - card.value) === 1 || Math.abs(c.value - card.value) === 2);
-                        if(isAdj) score += 20;
-                    }
-                }
-                score += Math.random() * 5; // 약간의 무작위성 (너무 똑같이만 하지 않도록)
+                if(roomData.stones[s].owner !== 'none') continue;
                 
-                if(score > bestPlay.score) {
-                    bestPlay.score = score;
-                    bestPlay.handIdx = h;
-                    bestPlay.stoneIdx = s;
+                let limit = roomData.stones[s].env === 'MUD' ? 4 : 3;
+                let currentField = roomData.p2_field[s] || [];
+                
+                if(card.tType === 'MUD' || card.tType === 'FOG') {
+                    if(roomData.stones[s].env !== 'none') continue;
+                    let score = 50 + Math.random() * 20; 
+                    if (score > bestPlay.score) bestPlay = { handIdx: h, stoneIdx: s, score: score, isEnv: true };
+                    continue;
                 }
+
+                if(currentField.length >= limit) continue;
+
+                let score = card.value || 5; 
+                score += Math.random() * 10;
+                if (score > bestPlay.score) bestPlay = { handIdx: h, stoneIdx: s, score: score, isEnv: false };
             }
         }
 
-        // 3. 찾은 자리에 배치 및 결과 처리
-        if(bestPlay.handIdx !== -1 && bestPlay.stoneIdx !== -1) {
-            let playedCard = aiHand.splice(bestPlay.handIdx, 1)[0];
-            let targetCol = roomData.p2_field[bestPlay.stoneIdx] || [];
-            targetCol.push(playedCard);
-            roomData.p2_field[bestPlay.stoneIdx] = targetCol;
-
-            // 방금 내서 양쪽 다 3장이 되었는지 검사
-            let oppField = roomData.p1_field[bestPlay.stoneIdx] || [];
-            if(targetCol.length === 3 && oppField.length === 3) {
-                let p2Strength = evaluateFormation(targetCol);
-                let p1Strength = evaluateFormation(oppField);
-                if(p2Strength > p1Strength) { roomData.stones[bestPlay.stoneIdx] = 'p2'; } 
-                else { roomData.stones[bestPlay.stoneIdx] = 'p1'; }
-            }
-
-            // 카드 보충
-            if(roomData.deck && roomData.deck.length > 0) {
-                aiHand.push(roomData.deck.pop());
-            }
-
-            roomData.turn = 'p1';
-            checkGameWinner(); 
-            roomRef.set(roomData);
-        }
-    }
-
-    // 🤖 AI 전용 논리적 증명 엔진 (나의 증명 코드와 동일한 로직을 AI 시점으로 수행)
-    function aiTryProve(stoneIndex) {
-        let aiField = roomData.p2_field[stoneIndex] || [];
-        let aiStrength = evaluateFormation(aiField);
-        let p1Field = roomData.p1_field[stoneIndex] || [];
-
-        let usedCards = [];
-        for(let i=0; i<9; i++) {
-            usedCards.push(...(roomData.p1_field[i] || []));
-            usedCards.push(...(roomData.p2_field[i] || []));
-        }
-        usedCards.push(...(roomData.p2_hand || [])); // AI는 자기 손패를 알고 계산함
-
-        let availablePool = [];
-        colors.forEach(color => {
-            for(let v=1; v<=9; v++) {
-                let isUsed = usedCards.some(c => c.color === color && c.value === v);
-                if(!isUsed) availablePool.push({color, value: v});
-            }
-        });
-
-        let maxOppStrength = 0;
-        let slotsToFill = 3 - p1Field.length;
-
-        if (slotsToFill === 0) { maxOppStrength = evaluateFormation(p1Field); } 
-        else if (slotsToFill === 1) {
-            for(let i=0; i<availablePool.length; i++) {
-                let str = evaluateFormation([...p1Field, availablePool[i]]);
-                if(str > maxOppStrength) maxOppStrength = str;
-            }
-        } 
-        else if (slotsToFill === 2) {
-            for(let i=0; i<availablePool.length; i++) {
-                for(let j=i+1; j<availablePool.length; j++) {
-                    let str = evaluateFormation([...p1Field, availablePool[i], availablePool[j]]);
-                    if(str > maxOppStrength) maxOppStrength = str;
-                }
-            }
-        } 
-        else if (slotsToFill === 3) {
-            for(let i=0; i<availablePool.length; i++) {
-                for(let j=i+1; j<availablePool.length; j++) {
-                    for(let k=j+1; k<availablePool.length; k++) {
-                        let str = evaluateFormation([availablePool[i], availablePool[j], availablePool[k]]);
-                        if(str > maxOppStrength) maxOppStrength = str;
-                    }
-                }
-            }
+        if (bestPlay.handIdx === -1) {
+            aiHand.pop(); 
+            roomData.step = 'DRAW';
+            roomRef.set(roomData); return;
         }
 
-        if (aiStrength >= maxOppStrength) {
-            chatRef.push({ sender: 'system', text: `🤖 AI가 연산을 끝내고 ${stoneIndex+1}번 경계석의 소유권을 강제로 빼앗아 갑니다!`, timestamp: Date.now() });
-            roomData.stones[stoneIndex] = 'p2';
-            checkGameWinner();
-            roomRef.set(roomData);
-            return true;
+        let playedCard = aiHand.splice(bestPlay.handIdx, 1)[0];
+        if (playedCard.type === 'tactic') roomData.p2_tactics_count = (roomData.p2_tactics_count || 0) + 1;
+
+        if (bestPlay.isEnv) {
+            roomData.stones[bestPlay.stoneIdx].env = playedCard.tType;
+            chatRef.push({ sender: 'system', text: `🤖 AI가 ${bestPlay.stoneIdx+1}번 구역에 [${playedCard.name}] 환경 카드를 발동했습니다.`, timestamp: Date.now() });
+        } else {
+            roomData.p2_field[bestPlay.stoneIdx].push(playedCard);
         }
-        return false;
+
+        roomData.step = 'DRAW'; 
+        recalculateAllStones();
+        roomRef.set(roomData);
     }
 
     function setupNewGameInit() {
         myRole = 'p1';
         sessionStorage.setItem('st_role_' + roomId, 'p1');
         let newRoom = {
-            gameState: 'WAITING', turn: 'p1', 
-            p1_online: true, p2_online: false, 
+            gameState: 'WAITING', turn: 'p1', step: 'PLAY',
             isAIMode: false, aiDifficulty: 'NORMAL',
-            deck: createShuffledDeck(),
-            stones: Array(9).fill('none'), 
+            clanDeck: createClanDeck(), tacticsDeck: createTacticsDeck(),
+            stones: Array.from({length: 9}, () => ({ owner: 'none', env: 'none' })), 
             p1_field: Array(9).fill([]), p2_field: Array(9).fill([]),
-            p1_hand: [], p2_hand: []
+            p1_hand: [], p2_hand: [],
+            p1_tactics_count: 0, p2_tactics_count: 0
         };
-        for(let i=0; i<6; i++) {
-            newRoom.p1_hand.push(newRoom.deck.pop());
-            newRoom.p2_hand.push(newRoom.deck.pop());
+        for(let i=0; i<7; i++) {
+            newRoom.p1_hand.push(newRoom.clanDeck.pop());
+            newRoom.p2_hand.push(newRoom.clanDeck.pop());
         }
         roomRef.set(newRoom);
-        chatRef.push({ sender: 'system', text: `🏠 방이 생성되었습니다. 링크를 공유하세요.`, timestamp: Date.now() });
+        chatRef.push({ sender: 'system', text: `🏠 확장판 방이 생성되었습니다. 상대방을 초대하세요.`, timestamp: Date.now() });
     }
 
-    function createShuffledDeck() {
+    function createClanDeck() {
         let deck = [];
         colors.forEach(color => {
-            for(let i=1; i<=9; i++) {
-                deck.push({ 
-                    color: color, 
-                    value: i,
-                    img: `images/${color}_${i}.png` 
-                });
-            }
+            // 💡 언더바를 제거한 파일 경로 적용 (예: images/red1.png)
+            for(let i=1; i<=9; i++) deck.push({ type: 'clan', color: color, value: i, img: `images/${color}${i}.png` });
         });
         return deck.sort(() => Math.random() - 0.5);
     }
 
+    function createTacticsDeck() {
+        return [
+            { type: 'tactic', tType: 'JOKER', name: '조커', img: 'images/t_joker.png' },
+            { type: 'tactic', tType: 'JOKER', name: '조커', img: 'images/t_joker.png' },
+            { type: 'tactic', tType: 'SPY', name: '스파이<br>(7)', img: 'images/t_spy.png' },
+            { type: 'tactic', tType: 'SHIELD', name: '방패병<br>(1~3)', img: 'images/t_shield.png' },
+            { type: 'tactic', tType: 'MUD', name: '진흙탕<br>(4장)', img: 'images/t_mud.png' },
+            { type: 'tactic', tType: 'FOG', name: '안개<br>(합계)', img: 'images/t_fog.png' },
+            { type: 'tactic', tType: 'TRAITOR', name: '배신자<br>(스틸)', img: 'images/t_traitor.png' },
+            { type: 'tactic', tType: 'DESERTER', name: '탈주자<br>(파괴)', img: 'images/t_deserter.png' },
+            { type: 'tactic', tType: 'REDEPLOY', name: '재배치<br>(이동)', img: 'images/t_redeploy.png' },
+            { type: 'tactic', tType: 'SCOUT', name: '정찰병<br>(+3-2)', img: 'images/t_scout.png' }
+        ].sort(() => Math.random() - 0.5);
+    }
+
     function selectCardInHand(index) {
         if(roomData.turn !== myRole) return;
+
+        if(roomData.step === 'SCOUT_RETURN') {
+            if(scoutSelection.includes(index)) scoutSelection = scoutSelection.filter(i => i !== index);
+            else {
+                scoutSelection.push(index);
+                if(scoutSelection.length === 2) {
+                    scoutSelection.sort((a,b)=>b-a).forEach(idx => {
+                        let c = roomData[`${myRole}_hand`].splice(idx, 1)[0];
+                        roomData.clanDeck.push(c); 
+                    });
+                    scoutSelection = [];
+                    roomData.turn = (myRole === 'p1' ? 'p2' : 'p1');
+                    roomData.step = 'PLAY';
+                    roomRef.set(roomData);
+                }
+            }
+            updateGameUI(); return;
+        }
+
         selectedHandIndex = index;
+        let card = roomData[`${myRole}_hand`][index];
+        let actionPanel = document.getElementById('action-panel');
+        actionPanel.innerHTML = '';
+        
+        if (card.type === 'tactic') {
+            if (['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
+                actionPanel.innerHTML += `<button class="btn btn-trick" onclick="triggerTrick('${card.tType}')">🔮 [${card.name}] 속임수 발동</button>`;
+            } else {
+                actionPanel.innerHTML += `<div style="color:#fff; font-size:13px; margin-bottom:5px;">배치할 경계석을 클릭하세요</div>`;
+            }
+        } else {
+            actionPanel.innerHTML += `<div style="color:#fff; font-size:13px; margin-bottom:5px;">배치할 경계석을 클릭하세요</div>`;
+        }
+
+        actionPanel.innerHTML += `<button class="btn" style="background:#e74c3c;" onclick="cancelSelection()">선택 취소</button>`;
+        actionPanel.style.display = 'flex';
         updateGameUI();
+    }
+
+    function triggerTrick(type) {
+        let myCount = roomData[`${myRole}_tactics_count`] || 0;
+        let oppCount = roomData[`${myRole === 'p1'?'p2':'p1'}_tactics_count`] || 0;
+        if(myCount >= oppCount + 1) { alert("상대방보다 전략 카드를 2장 이상 많이 쓸 수 없습니다."); return; }
+
+        activeTrick = type; trickTarget = null;
+        document.getElementById('action-panel').style.display = 'none';
+        
+        if (type === 'TRAITOR') alert("훔쳐올 [상대방 필드]의 카드를 클릭하세요.");
+        else if (type === 'DESERTER') alert("버리게 할 [상대방 필드]의 카드를 클릭하세요.");
+        else if (type === 'REDEPLOY') alert("이동시킬 [나의 필드] 카드를 클릭하세요.");
+        else if (type === 'SCOUT') executeScout(); 
+    }
+
+    function handleBoardCardClick(side, colIdx, cardIdx, cardObj) {
+        if (!activeTrick || roomData.turn !== myRole) return;
+
+        if (activeTrick === 'TRAITOR' && side === 'opp') {
+            if(cardObj.type === 'tactic') { alert("부대 카드만 훔칠 수 있습니다!"); return; }
+            trickTarget = { col: colIdx, idx: cardIdx };
+            alert("이 카드를 놓을 [나의 경계석] 기둥을 클릭하세요.");
+        }
+        else if (activeTrick === 'DESERTER' && side === 'opp') {
+            roomData[`${myRole === 'p1'?'p2':'p1'}_field`][colIdx].splice(cardIdx, 1);
+            chatRef.push({ sender: 'system', text: `💨 탈주자 발동! 상대방의 카드가 날아갔습니다.`, timestamp: Date.now() });
+            consumeTrickCard();
+        }
+        else if (activeTrick === 'REDEPLOY' && side === 'my') {
+            trickTarget = { col: colIdx, idx: cardIdx };
+            alert("이 카드를 이동시킬 [나의 다른 경계석] 기둥을 클릭하세요.");
+        }
     }
 
     function selectStone(index) {
         if(roomData.turn !== myRole) return;
-        if(roomData.stones[index] !== 'none') { alert("이미 점령된 경계석입니다."); return; }
-        
-        selectedStoneIndex = index;
+        if(roomData.stones[index].owner !== 'none') { alert("이미 점령된 경계석입니다."); return; }
+        let oppRole = myRole === 'p1' ? 'p2' : 'p1';
+
+        if (activeTrick === 'TRAITOR' && trickTarget) {
+            let limit = roomData.stones[index].env === 'MUD' ? 4 : 3;
+            if ((roomData[`${myRole}_field`][index] || []).length >= limit) { alert("여기는 자리가 없습니다!"); return; }
+            let stolen = roomData[`${oppRole}_field`][trickTarget.col].splice(trickTarget.idx, 1)[0];
+            roomData[`${myRole}_field`][index].push(stolen);
+            chatRef.push({ sender: 'system', text: `🗡️ 배신자 발동! 상대방 카드를 스틸했습니다.`, timestamp: Date.now() });
+            consumeTrickCard(); return;
+        }
+        if (activeTrick === 'REDEPLOY' && trickTarget) {
+            let limit = roomData.stones[index].env === 'MUD' ? 4 : 3;
+            if ((roomData[`${myRole}_field`][index] || []).length >= limit) { alert("여기는 자리가 없습니다!"); return; }
+            let moved = roomData[`${myRole}_field`][trickTarget.col].splice(trickTarget.idx, 1)[0];
+            roomData[`${myRole}_field`][index].push(moved);
+            chatRef.push({ sender: 'system', text: `🏃 재배치 발동! 카드의 위치를 바꿨습니다.`, timestamp: Date.now() });
+            consumeTrickCard(); return;
+        }
+
+        if(selectedHandIndex === null) return;
+        let card = roomData[`${myRole}_hand`][selectedHandIndex];
+        let limit = roomData.stones[index].env === 'MUD' ? 4 : 3;
         let myCardsCount = (roomData[`${myRole}_field`][index] || []).length;
+
+        if(card.type === 'tactic') {
+            let myCount = roomData[`${myRole}_tactics_count`] || 0;
+            let oppCount = roomData[`${oppRole}_tactics_count`] || 0;
+            if(myCount >= oppCount + 1) { alert("상대방보다 전략 카드를 2장 이상 많이 쓸 수 없습니다."); return; }
+        }
+
+        if(card.tType === 'MUD' || card.tType === 'FOG') {
+            if(roomData.stones[index].env !== 'none') { alert("이곳엔 이미 환경 카드가 적용되어 있습니다."); return; }
+            roomData.stones[index].env = card.tType;
+            chatRef.push({ sender: 'system', text: `🌩️ 환경 변화! ${index+1}번 지역에 [${card.name}] 발동!`, timestamp: Date.now() });
+            consumeTrickCard(true); return;
+        }
+
+        if(myCardsCount >= limit) { alert("이 경계석에는 이미 카드가 꽉 찼습니다."); return; }
+
+        let playedCard = roomData[`${myRole}_hand`].splice(selectedHandIndex, 1)[0];
+        if(playedCard.type === 'tactic') roomData[`${myRole}_tactics_count`] = (roomData[`${myRole}_tactics_count`]||0) + 1;
         
-        let actionPanel = document.getElementById('action-panel');
-        actionPanel.innerHTML = '';
+        roomData[`${myRole}_field`][index].push(playedCard);
+        roomData.step = 'DRAW'; selectedHandIndex = null; activeTrick = null; trickTarget = null;
         
-        let hasAction = false;
+        recalculateAllStones(); 
+        roomRef.set(roomData);
+    }
 
-        if(selectedHandIndex !== null && myCardsCount < 3) {
-            actionPanel.innerHTML += `<button class="btn btn-play" onclick="executePlay()">⛳ 선택한 카드 배치</button>`;
-            hasAction = true;
+    function executeScout() {
+        roomData[`${myRole}_hand`].splice(selectedHandIndex, 1);
+        roomData[`${myRole}_tactics_count`] = (roomData[`${myRole}_tactics_count`]||0) + 1;
+        chatRef.push({ sender: 'system', text: `🦅 정찰병 발동! 카드를 3장 뽑습니다.`, timestamp: Date.now() });
+        for(let i=0; i<3; i++) {
+            if(roomData.clanDeck && roomData.clanDeck.length > 0) roomData[`${myRole}_hand`].push(roomData.clanDeck.pop());
         }
+        roomData.step = 'SCOUT_RETURN'; activeTrick = null; selectedHandIndex = null;
+        roomRef.set(roomData);
+    }
 
-        if(myCardsCount === 3) {
-            actionPanel.innerHTML += `<button class="btn btn-prove" onclick="executeClaimProve()">🔍 논리적 증명 및 점령</button>`;
-            hasAction = true;
-        }
+    function consumeTrickCard(isEnv = false) {
+        roomData[`${myRole}_hand`].splice(selectedHandIndex, 1);
+        roomData[`${myRole}_tactics_count`] = (roomData[`${myRole}_tactics_count`]||0) + 1;
+        roomData.step = 'DRAW'; activeTrick = null; trickTarget = null; selectedHandIndex = null;
+        recalculateAllStones(); roomRef.set(roomData);
+    }
 
-        actionPanel.innerHTML += `<button class="btn" style="background:#e74c3c;" onclick="cancelSelection()">취소</button>`;
-
-        if(!hasAction) {
-            alert("먼저 손에서 카드를 선택하거나, 3장이 채워진 돌을 클릭하세요.");
-            cancelSelection();
-            return;
-        }
-
-        actionPanel.style.display = 'flex';
+    function drawCard(deckType) {
+        let deck = deckType === 'clan' ? roomData.clanDeck : roomData.tacticsDeck;
+        if(!deck || deck.length === 0) { alert("이 덱은 모두 소진되었습니다!"); return; }
+        roomData[`${myRole}_hand`].push(deck.pop());
+        roomData.step = 'PLAY';
+        roomData.turn = (myRole === 'p1' ? 'p2' : 'p1');
+        roomRef.set(roomData);
     }
 
     function cancelSelection() {
-        selectedHandIndex = null;
-        selectedStoneIndex = null;
+        selectedHandIndex = null; activeTrick = null; trickTarget = null; scoutSelection = [];
         document.getElementById('action-panel').style.display = 'none';
         updateGameUI();
     }
 
-    function executePlay() {
-        if(selectedHandIndex === null || selectedStoneIndex === null) return;
-        
-        let hand = roomData[`${myRole}_hand`];
-        let card = hand.splice(selectedHandIndex, 1)[0];
-        
-        let myField = roomData[`${myRole}_field`];
-        let targetCol = myField[selectedStoneIndex] || [];
-        targetCol.push(card);
-        myField[selectedStoneIndex] = targetCol;
-
-        let oppRole = myRole === 'p1' ? 'p2' : 'p1';
-        let oppField = roomData[`${oppRole}_field`];
-        
-        if(targetCol.length === 3 && (oppField[selectedStoneIndex] || []).length === 3) {
-            let myStrength = evaluateFormation(targetCol);
-            let oppStrength = evaluateFormation(oppField[selectedStoneIndex]);
-            
-            if(myStrength > oppStrength) { roomData.stones[selectedStoneIndex] = myRole; } 
-            else { roomData.stones[selectedStoneIndex] = oppRole; }
+    function getBestFormation(cards, env) {
+        if(cards.length === 0) return 0;
+        if (env === 'FOG') {
+            let sum = 0;
+            cards.forEach(c => {
+                if (c.tType === 'JOKER') sum += 9;
+                else if (c.tType === 'SPY') sum += 7;
+                else if (c.tType === 'SHIELD') sum += 3;
+                else sum += c.value;
+            });
+            return 1000 + sum;
         }
 
-        if(roomData.deck && roomData.deck.length > 0) {
-            hand.push(roomData.deck.pop());
-        }
+        let wildcards = cards.filter(c => ['JOKER','SPY','SHIELD'].includes(c.tType));
+        let normal = cards.filter(c => !['JOKER','SPY','SHIELD'].includes(c.tType));
+        if (wildcards.length === 0) return evaluateStandard(normal, env);
 
-        roomData.turn = oppRole;
-        selectedHandIndex = null;
-        selectedStoneIndex = null;
-        document.getElementById('action-panel').style.display = 'none';
-        
-        checkGameWinner();
-        roomRef.set(roomData);
+        let best = 0;
+        let cColors = ['red','blue','green','yellow','purple','white'];
+
+        function backtrack(idx, currentCards) {
+            if (idx === wildcards.length) {
+                let score = evaluateStandard(currentCards, env);
+                if (score > best) best = score; return;
+            }
+            let wc = wildcards[idx];
+            if (wc.tType === 'JOKER') {
+                for(let c of cColors) for(let v=1; v<=9; v++) backtrack(idx+1, [...currentCards, {color:c, value:v}]);
+            } else if (wc.tType === 'SPY') {
+                for(let c of cColors) backtrack(idx+1, [...currentCards, {color:c, value:7}]);
+            } else if (wc.tType === 'SHIELD') {
+                for(let c of cColors) for(let v=1; v<=3; v++) backtrack(idx+1, [...currentCards, {color:c, value:v}]);
+            }
+        }
+        backtrack(0, normal);
+        return best;
     }
 
-    function executeClaimProve() {
-        if (selectedStoneIndex === null) return;
-        let myField = roomData[`${myRole}_field`][selectedStoneIndex] || [];
-        if (myField.length < 3) return;
-
-        let myStrength = evaluateFormation(myField);
-        let oppRole = myRole === 'p1' ? 'p2' : 'p1';
-        let oppField = roomData[`${oppRole}_field`][selectedStoneIndex] || [];
-
-        let usedCards = [];
-        for(let i=0; i<9; i++) {
-            usedCards.push(...(roomData.p1_field[i] || []));
-            usedCards.push(...(roomData.p2_field[i] || []));
+    function evaluateStandard(cards, env) {
+        let sorted = [...cards].sort((a,b) => a.value - b.value);
+        let sum = sorted.reduce((a,b)=>a+b.value, 0);
+        let isFlush = sorted.every(c => c.color === sorted[0].color);
+        let isStraight = true;
+        for(let i=1; i<sorted.length; i++) {
+            if (sorted[i].value !== sorted[i-1].value + 1) isStraight = false;
         }
-        usedCards.push(...(roomData[`${myRole}_hand`] || []));
+        let isTriple = sorted.every(c => c.value === sorted[0].value); 
+        let maxVal = sorted[sorted.length-1].value;
 
-        let availablePool = [];
-        colors.forEach(color => {
-            for(let v=1; v<=9; v++) {
-                let isUsed = usedCards.some(c => c.color === color && c.value === v);
-                if(!isUsed) availablePool.push({color, value: v});
-            }
-        });
-
-        let maxOppStrength = 0;
-        let slotsToFill = 3 - oppField.length;
-
-        if (slotsToFill === 0) { maxOppStrength = evaluateFormation(oppField); } 
-        else if (slotsToFill === 1) {
-            for(let i=0; i<availablePool.length; i++) {
-                let str = evaluateFormation([...oppField, availablePool[i]]);
-                if(str > maxOppStrength) maxOppStrength = str;
-            }
-        } 
-        else if (slotsToFill === 2) {
-            for(let i=0; i<availablePool.length; i++) {
-                for(let j=i+1; j<availablePool.length; j++) {
-                    let str = evaluateFormation([...oppField, availablePool[i], availablePool[j]]);
-                    if(str > maxOppStrength) maxOppStrength = str;
-                }
-            }
-        } 
-        else if (slotsToFill === 3) {
-            for(let i=0; i<availablePool.length; i++) {
-                for(let j=i+1; j<availablePool.length; j++) {
-                    for(let k=j+1; k<availablePool.length; k++) {
-                        let str = evaluateFormation([availablePool[i], availablePool[j], availablePool[k]]);
-                        if(str > maxOppStrength) maxOppStrength = str;
-                    }
-                }
-            }
-        }
-
-        if (myStrength >= maxOppStrength) {
-            chatRef.push({ sender: 'system', text: `🚨 Player ${myRole === 'p1'? '1' : '2'}님이 ${selectedStoneIndex+1}번 경계석의 승리를 완벽히 증명하고 가져갑니다!`, timestamp: Date.now() });
-            roomData.stones[selectedStoneIndex] = myRole;
-            checkGameWinner();
-            roomRef.set(roomData);
-        } else {
-            alert("❌ 증명 실패. 상대방이 남은 카드를 조합해 역전할 가능성이 아직 남아있습니다.");
-        }
-        cancelSelection();
-    }
-
-    function evaluateFormation(cards) {
-        let sorted = [...cards].sort((a, b) => a.value - b.value);
-        let isFlush = (sorted[0].color === sorted[1].color && sorted[1].color === sorted[2].color);
-        let isStraight = (sorted[0].value + 1 === sorted[1].value && sorted[1].value + 1 === sorted[2].value);
-        let isTriple = (sorted[0].value === sorted[1].value && sorted[1].value === sorted[2].value);
-        let sum = sorted[0].value + sorted[1].value + sorted[2].value;
-        let maxVal = sorted[2].value;
-
-        if(isFlush && isStraight) return 5000 + maxVal; 
-        if(isTriple) return 4000 + sorted[0].value;     
-        if(isFlush) return 3000 + maxVal;               
-        if(isStraight) return 2000 + maxVal;            
+        if (isFlush && isStraight) return 5000 + maxVal; 
+        if (isTriple) return 4000 + maxVal;     
+        if (isFlush) return 3000 + maxVal;               
+        if (isStraight) return 2000 + maxVal;            
         return 1000 + sum;                              
+    }
+
+    function recalculateAllStones() {
+        let changed = false;
+        for(let i=0; i<9; i++) {
+            if(roomData.stones[i].owner !== 'none') continue;
+            let limit = roomData.stones[i].env === 'MUD' ? 4 : 3;
+            let p1C = roomData.p1_field[i] || [];
+            let p2C = roomData.p2_field[i] || [];
+            
+            if(p1C.length === limit && p2C.length === limit) {
+                let s1 = getBestFormation(p1C, roomData.stones[i].env);
+                let s2 = getBestFormation(p2C, roomData.stones[i].env);
+                if(s1 > s2) roomData.stones[i].owner = 'p1';
+                else if(s2 > s1) roomData.stones[i].owner = 'p2';
+                else roomData.stones[i].owner = roomData.turn === 'p1' ? 'p2' : 'p1'; 
+                changed = true;
+            }
+        }
+        if(changed) checkGameWinner();
     }
 
     function checkGameWinner() {
@@ -592,39 +632,27 @@
         let maxP1Cons = 0, maxP2Cons = 0;
 
         for(let i=0; i<9; i++) {
-            if(stones[i] === 'p1') { p1Count++; p1Consecutive++; p2Consecutive = 0; }
-            else if(stones[i] === 'p2') { p2Count++; p2Consecutive++; p1Consecutive = 0; }
+            if(stones[i].owner === 'p1') { p1Count++; p1Consecutive++; p2Consecutive = 0; }
+            else if(stones[i].owner === 'p2') { p2Count++; p2Consecutive++; p1Consecutive = 0; }
             else { p1Consecutive = 0; p2Consecutive = 0; }
             
             if(p1Consecutive > maxP1Cons) maxP1Cons = p1Consecutive;
             if(p2Consecutive > maxP2Cons) maxP2Cons = p2Consecutive;
         }
 
-        if(p1Count >= 5 || maxP1Cons >= 3) triggerGameOver('p1', maxP1Cons >= 3 ? '인접한 경계석 3개 점령' : '경계석 총 5개 점령');
-        else if(p2Count >= 5 || maxP2Cons >= 3) triggerGameOver('p2', maxP2Cons >= 3 ? '인접한 경계석 3개 점령' : '경계석 총 5개 점령');
-    }
-
-    function triggerGameOver(winner, reason) {
-        roomData.gameState = 'GAME_OVER';
-        roomData.winner = winner;
-        roomData.winReason = reason;
+        if(p1Count >= 5 || maxP1Cons >= 3) { roomData.gameState = 'GAME_OVER'; roomData.winner = 'p1'; roomData.winReason = maxP1Cons >= 3 ? '인접한 경계석 3개 점령' : '총 5개 점령'; }
+        else if(p2Count >= 5 || maxP2Cons >= 3) { roomData.gameState = 'GAME_OVER'; roomData.winner = 'p2'; roomData.winReason = maxP2Cons >= 3 ? '인접한 경계석 3개 점령' : '총 5개 점령'; }
     }
 
     function updateGameUI() {
         const table = document.getElementById('game-table');
         const status = document.getElementById('game-status');
-        
-        // AI 모드이거나 진짜 사람이 들어왔으면 AI 시작 버튼 숨기기
-        if (roomData.p2_online || roomData.isAIMode) {
-            document.getElementById('ai-start-btn').style.display = 'none';
-        } else {
-            document.getElementById('ai-start-btn').style.display = 'inline-block';
-        }
+        let oppRole = myRole === 'p1' ? 'p2' : 'p1';
 
-        if (roomData.gameState === 'WAITING') {
-            status.innerText = "⏳ 2P를 기다리는 중입니다... 친구 초대 혹은 AI 버튼을 눌러주세요!";
-            table.className = "game-table waiting"; return;
-        }
+        if (roomData.p2_online || roomData.isAIMode) document.getElementById('ai-start-btn').style.display = 'none';
+        else document.getElementById('ai-start-btn').style.display = 'inline-block';
+
+        if (roomData.gameState === 'WAITING') { status.innerText = "⏳ 2P를 기다리는 중입니다..."; table.className = "game-table waiting"; return; }
         
         if (roomData.gameState === 'GAME_OVER') {
             table.className = "game-table waiting";
@@ -636,46 +664,59 @@
         } else {
             document.getElementById('result-screen').style.display = 'none';
             table.className = "game-table active";
-            if (roomData.turn === myRole) {
-                status.innerText = "🟢 내 차례입니다! 카드를 선택하고 경계석을 누르세요.";
+            if(roomData.step === 'SCOUT_RETURN' && roomData.turn === myRole) {
+                status.innerText = "🦅 정찰병 활성화: 덱으로 돌려보낼 카드 2장을 클릭하세요.";
             } else {
-                status.innerText = roomData.isAIMode ? "🤖 AI가 수를 고심하고 있습니다..." : "🔴 상대방 차례입니다...";
+                status.innerText = roomData.turn === myRole ? (activeTrick ? `🔮 속임수 발동 중: 화면의 지시를 따르세요` : `🟢 내 차례입니다! 카드를 선택하고 경계석을 누르세요.`) : (roomData.isAIMode ? "🤖 AI가 수를 고심하고 있습니다..." : "🔴 상대방 차례입니다...");
             }
         }
 
-        document.getElementById('deck-count').innerText = roomData.deck ? roomData.deck.length : 0;
+        document.getElementById('draw-overlay').style.display = (roomData.step === 'DRAW' && roomData.turn === myRole) ? 'flex' : 'none';
+        document.getElementById('deck-clan-count').innerText = roomData.clanDeck ? roomData.clanDeck.length : 0;
+        document.getElementById('deck-tactic-count').innerText = roomData.tacticsDeck ? roomData.tacticsDeck.length : 0;
+
+        const oppHandDiv = document.getElementById('opp-hand-area');
+        oppHandDiv.innerHTML = '';
+        let oppHand = roomData[`${oppRole}_hand`] || [];
+        oppHand.forEach(c => {
+            let div = document.createElement('div');
+            div.className = `card ${c.type === 'tactic' ? 'card-back-tactic' : 'card-back-clan'}`;
+            div.style.width = '35px'; div.style.height = '50px'; div.style.borderRadius = '4px'; div.style.borderWidth = '2px';
+            oppHandDiv.appendChild(div);
+        });
 
         const handDiv = document.getElementById('my-hand');
         handDiv.innerHTML = '';
         let myHand = roomData[`${myRole}_hand`] || [];
         myHand.forEach((card, idx) => {
             let div = document.createElement('div');
-            div.className = `card ${card.color} ${selectedHandIndex === idx ? 'selected' : ''}`;
-            div.style.backgroundImage = `url('${card.img}')`; 
-            div.innerHTML = `<div class="card-num">${card.value}</div>`;
+            div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} ${selectedHandIndex === idx ? 'selected' : ''}`;
+            if(scoutSelection.includes(idx)) div.className += ' selected';
+            if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
+            div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
             div.onclick = () => selectCardInHand(idx);
             handDiv.appendChild(div);
         });
 
-        let oppRole = myRole === 'p1' ? 'p2' : 'p1';
         let myScore = 0, oppScore = 0;
 
         for(let i=0; i<9; i++) {
             let stoneEl = document.getElementById(`stone-${i}`);
-            let owner = roomData.stones[i];
-            stoneEl.className = 'stone-marker';
-            if(owner === myRole) { stoneEl.classList.add('p1'); myScore++; }
-            else if(owner === oppRole) { stoneEl.classList.add('p2'); oppScore++; }
+            let stoneData = roomData.stones[i];
+            stoneEl.className = `stone-marker ${stoneData.env !== 'none' ? 'env-' + stoneData.env.toLowerCase() : ''}`;
+            if(stoneData.owner === myRole) { stoneEl.classList.add('p1'); myScore++; }
+            else if(stoneData.owner === oppRole) { stoneEl.classList.add('p2'); oppScore++; }
             
             let myCol = document.getElementById(`container-my-${i}`);
             myCol.innerHTML = '';
             let myCards = roomData[`${myRole}_field`][i] || [];
             myCards.forEach((card, idx) => {
                 let div = document.createElement('div');
-                div.className = `card ${card.color} stacked-card`;
+                div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} stacked-card`;
                 div.style.setProperty('--card-idx', idx);
-                div.style.backgroundImage = `url('${card.img}')`; 
-                div.innerHTML = `<div class="card-num">${card.value}</div>`;
+                if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
+                div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
+                div.onclick = () => handleBoardCardClick('my', i, idx, card);
                 myCol.appendChild(div);
             });
 
@@ -684,14 +725,15 @@
             let oppCards = roomData[`${oppRole}_field`][i] || [];
             oppCards.forEach((card, idx) => {
                 let div = document.createElement('div');
-                div.className = `card ${card.color} stacked-card`;
+                div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} stacked-card`;
                 div.style.setProperty('--card-idx', idx);
-                div.style.backgroundImage = `url('${card.img}')`; 
-                div.innerHTML = `<div class="card-num">${card.value}</div>`;
+                if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
+                div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
+                div.onclick = () => handleBoardCardClick('opp', i, idx, card);
                 oppCol.appendChild(div);
             });
         }
-        document.getElementById('score-area').innerText = `나의 경계석: ${myScore}개 | 상대 경계석: ${oppScore}개`;
+        document.getElementById('score-area').innerText = `나의 경계석: ${myScore}개 | 전략카드 사용: ${roomData[`${myRole}_tactics_count`]||0}장 vs ${roomData[`${oppRole}_tactics_count`]||0}장`;
     }
 
     function sendChatMessage() {
@@ -700,10 +742,7 @@
         chatRef.push({ sender: myRole, text: input.value, timestamp: Date.now() });
         input.value = '';
     }
-
-    function executeServerReset() {
-        setupNewGameInit();
-    }
+    function executeServerReset() { setupNewGameInit(); }
 </script>
 </body>
 </html>
