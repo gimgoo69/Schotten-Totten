@@ -30,20 +30,28 @@
         .column { flex: 1; min-height: 0; background: rgba(15, 20, 25, 0.8); border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 4px; position: relative; display: flex; flex-direction: column; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); z-index: 1; transition: 0.2s; cursor: pointer; }
         .column:hover { z-index: 100; border-color: rgba(241, 196, 15, 0.5); background: rgba(30, 40, 50, 0.9); }
 
-        .stacked-container { position: relative; width: 100%; flex: 1; min-height: 90px; display: flex; justify-content: center; z-index: 20; pointer-events: none;}
-        
-        .stacked-container.opp-side .stacked-card { top: auto; bottom: calc(var(--card-idx) * 20px); pointer-events: auto; }
-        .stacked-container.my-side .stacked-card { top: calc(var(--card-idx) * 20px); pointer-events: auto; }
-        .stacked-card { position: absolute; left: 50%; margin-left: -29px; transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease; z-index: var(--card-idx); }
-        
-        .column:hover .stacked-container.my-side .stacked-card { top: calc(20px + var(--card-idx) * 32px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
-        .column:hover .stacked-container.opp-side .stacked-card { bottom: calc(20px + var(--card-idx) * 32px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+        /* 💡 로스트시티의 완벽한 수직 정렬 & 부채꼴 애니메이션 적용 */
+        .stacked-container { position: relative; width: 100%; flex: 1; min-height: 105px; display: flex; justify-content: center; z-index: 20; pointer-events: none; }
+        .stacked-container.opp-side { align-items: flex-end; }
+        .stacked-container.my-side { align-items: flex-start; }
 
-        .column .stacked-container .stacked-card:hover { transform: scale(1.3) translateY(0) !important; box-shadow: 0 20px 40px rgba(0,0,0,1) !important; z-index: 1000 !important; }
-        .stacked-container.my-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(-25px) scale(0.95) !important; }
-        .stacked-container.my-side .stacked-card:hover ~ .stacked-card { transform: translateY(25px) scale(0.95) !important; z-index: calc(500 - var(--card-idx)) !important; }
-        .stacked-container.opp-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(25px) scale(0.95) !important; }
-        .stacked-container.opp-side .stacked-card:hover ~ .stacked-card { transform: translateY(-25px) scale(0.95) !important; z-index: calc(500 - var(--card-idx)) !important; }
+        .stacked-card { position: absolute; left: 50%; margin-left: -29px; transition: top 0.3s ease, bottom 0.3s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease; z-index: var(--card-idx); }
+        
+        .stacked-container.my-side .stacked-card { top: calc(var(--card-idx) * 12px); pointer-events: auto; }
+        .stacked-container.opp-side .stacked-card { bottom: calc(var(--card-idx) * 12px); pointer-events: auto; }
+
+        /* 기둥에 마우스 올렸을 때 위아래로 쫙 펼쳐지기 */
+        .column:hover .stacked-container.my-side .stacked-card { top: calc(15px + var(--card-idx) * 32px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+        .column:hover .stacked-container.opp-side .stacked-card { bottom: calc(15px + var(--card-idx) * 32px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+
+        /* 특정 카드에 마우스 올렸을 때 하스스톤 스타일 팝업 및 밀어내기 */
+        .column .stacked-container .stacked-card:hover { transform: scale(1.3) !important; box-shadow: 0 20px 40px rgba(0,0,0,1) !important; z-index: 1000 !important; }
+
+        .stacked-container.my-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(-35px) !important; }
+        .stacked-container.my-side .stacked-card:hover ~ .stacked-card { transform: translateY(35px) !important; z-index: calc(500 - var(--card-idx)) !important; }
+
+        .stacked-container.opp-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(35px) !important; }
+        .stacked-container.opp-side .stacked-card:hover ~ .stacked-card { transform: translateY(-35px) !important; z-index: calc(500 - var(--card-idx)) !important; }
 
         .stone-row { display: flex; justify-content: space-between; gap: 5px; padding: 5px 12px; background: rgba(20, 30, 40, 0.8); border-radius: 8px; margin: 2px 0; }
         .stone-marker { flex: 1; height: 35px; background: #7f8c8d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #34495e; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); font-size: 16px; transition: 0.3s; position: relative; overflow: hidden; cursor: pointer; }
@@ -67,7 +75,6 @@
         .card-back-clan { background: repeating-linear-gradient(45deg, #795548, #795548 8px, #5D4037 8px, #5D4037 16px) !important; border-color: #3e2723 !important; }
         .card-back-tactic { background: repeating-linear-gradient(45deg, #8e44ad, #8e44ad 8px, #732d91 8px, #732d91 16px) !important; border-color: #4a235a !important; }
 
-        /* 💡 툴팁 CSS (전략카드 스킬 설명창) */
         .card[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); color: #f1c40f; padding: 8px 12px; border-radius: 6px; font-size: 11px; white-space: pre-line; width: 140px; text-align: left; line-height: 1.4; border: 1px solid #9b59b6; box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 10000; pointer-events: none; }
 
         .card .card-num { margin: auto; font-size: 28px; font-weight: 900; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;}
@@ -241,7 +248,6 @@
     let trickTarget = null;
     let scoutSelection = [];
 
-    // 모달 토글
     function toggleModal(id) {
         const el = document.getElementById(id);
         el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
@@ -331,7 +337,6 @@
         }
     }
 
-    // AI 난이도(EASY, NORMAL, HARD)에 따른 3단계 로직 적용
     function runAIIntelligence() {
         if(roomData.turn !== 'p2' || roomData.gameState !== 'PLAYING') return;
         const aiHand = roomData.p2_hand || [];
@@ -380,7 +385,6 @@
                 if(currentField.length >= limit) continue;
 
                 let score = card.value || 5; 
-                // 난이도별 점수 배점 세분화
                 if (diff !== 'EASY') {
                     if (currentField.length > 0) {
                         let colorMatch = currentField.every(c => c.color === card.color);
@@ -663,7 +667,7 @@
         return 1000 + sum;                              
     }
 
-    // 💡 완벽한 자동 논리 증명(Auto-Prove) 엔진
+    // 💡 자동 논리 증명(Auto-Prove) 엔진
     function recalculateAllStones() {
         let changed = false;
         
@@ -675,7 +679,7 @@
                 let myC = getFieldCards(role, i);
                 let oppC = getFieldCards(oppRole, i);
                 
-                // 1. 둘 다 꽉 찼을 때 (기본 평가)
+                // 1. 둘 다 꽉 찼을 때
                 if(myC.length === limit && oppC.length === limit) {
                     let s1 = getBestFormation(myC, roomData.stones[i].env);
                     let s2 = getBestFormation(oppC, roomData.stones[i].env);
@@ -684,15 +688,15 @@
                     else roomData.stones[i].owner = roomData.turn === role ? oppRole : role; 
                     changed = true;
                 }
-                // 2. 💡 자동 논리 증명 엔진 (내가 꽉 찼고, 상대방이 3장 이하로 남았을 때 완벽한 경우의 수 탐색)
+                // 2. 자동 논리 증명 (내가 꽉 찼고, 상대방이 덜 찼을 때 완벽한 경우의 수 탐색)
                 else if (myC.length === limit && oppC.length < limit && (limit - oppC.length <= 3)) {
                     let myStrength = getBestFormation(myC, roomData.stones[i].env);
                     let maxOppStrength = calculateMaxOpponentStrength(oppC, oppRole, roomData.stones[i].env, limit);
                     
-                    // 무승부일 경우 먼저 내려놓은 쪽(role)이 승리하므로 >= 비교 성립
+                    // 무승부일 경우 먼저 완성한 방어자(role)가 승리하므로 >= 성립
                     if (myStrength >= maxOppStrength) {
                         roomData.stones[i].owner = role;
-                        chatRef.push({ sender: 'system', text: `💡 [자동 증명] ${role==='p1'?'P1':'P2'}님의 완벽한 우위로 ${i+1}번 경계석을 자동 획득합니다!`, timestamp: Date.now() });
+                        chatRef.push({ sender: 'system', text: `💡 [자동 증명] ${role==='p1'?'P1':'P2'}님의 완벽한 우위로 ${i+1}번 경계석을 획득합니다!`, timestamp: Date.now() });
                         changed = true;
                     }
                 }
@@ -701,14 +705,12 @@
         if(changed) checkGameWinner();
     }
 
-    // 상대방이 남은 카드로 낼 수 있는 가장 센 경우의 수를 계산 (브루트포스)
     function calculateMaxOpponentStrength(oppC, oppRole, env, limit) {
         let usedCards = [];
         for(let i=0; i<9; i++) {
             usedCards.push(...getFieldCards('p1', i));
             usedCards.push(...getFieldCards('p2', i));
         }
-        // 상대방 손패 + 내 손패까지 사용된 카드로 간주 (가장 보수적인 계산)
         usedCards.push(...(roomData.p1_hand || []));
         usedCards.push(...(roomData.p2_hand || []));
 
@@ -837,10 +839,7 @@
             div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} ${selectedHandIndex === idx ? 'selected' : ''}`;
             if(scoutSelection.includes(idx)) div.className += ' selected';
             if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
-            
-            // 💡 전략카드 툴팁 적용
             if(card.desc) div.setAttribute('data-tooltip', card.desc);
-
             div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
             div.onclick = () => selectCardInHand(idx);
             handDiv.appendChild(div);
@@ -863,7 +862,7 @@
                 div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} stacked-card`;
                 div.style.setProperty('--card-idx', idx);
                 if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
-                if(card.desc) div.setAttribute('data-tooltip', card.desc); // 필드 카드 툴팁
+                if(card.desc) div.setAttribute('data-tooltip', card.desc);
                 div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
                 div.onclick = (e) => handleBoardCardClick(e, 'my', i, idx, card);
                 myCol.appendChild(div);
@@ -877,7 +876,7 @@
                 div.className = `card ${card.color || ''} ${card.type === 'tactic' ? 'tactic' : ''} stacked-card`;
                 div.style.setProperty('--card-idx', idx);
                 if(card.img) div.style.backgroundImage = `url('${card.img}')`; 
-                if(card.desc) div.setAttribute('data-tooltip', card.desc); // 필드 카드 툴팁
+                if(card.desc) div.setAttribute('data-tooltip', card.desc);
                 div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
                 div.onclick = (e) => handleBoardCardClick(e, 'opp', i, idx, card);
                 oppCol.appendChild(div);
