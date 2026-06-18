@@ -30,9 +30,37 @@
         .column { flex: 1; min-height: 0; background: rgba(15, 20, 25, 0.8); border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 4px; position: relative; display: flex; flex-direction: column; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); z-index: 1; transition: 0.2s; cursor: pointer; }
         .column:hover { z-index: 100; border-color: rgba(241, 196, 15, 0.5); background: rgba(30, 40, 50, 0.9); }
 
-        /* 💡 1. 카드 기본 속성 */
+        .stacked-container { position: relative; width: 100%; flex: 1; min-height: 105px; display: flex; justify-content: center; z-index: 20; pointer-events: none;}
+        .stacked-container.opp-side { align-items: flex-end; }
+        .stacked-container.my-side { align-items: flex-start; }
+
+        .stacked-card { position: absolute !important; left: 0; right: 0; margin: 0 auto; transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease; z-index: var(--card-idx); }
+        
+        .stacked-container.my-side .stacked-card { top: calc(15px + var(--card-idx) * 20px); pointer-events: auto; }
+        .stacked-container.opp-side .stacked-card { bottom: calc(15px + var(--card-idx) * 20px); pointer-events: auto; }
+
+        .column:hover .stacked-container.my-side .stacked-card { top: calc(25px + var(--card-idx) * 35px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+        .column:hover .stacked-container.opp-side .stacked-card { bottom: calc(25px + var(--card-idx) * 35px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
+
+        .column .stacked-container .stacked-card:hover { transform: scale(1.3) !important; box-shadow: 0 20px 40px rgba(0,0,0,1) !important; z-index: 1000 !important; }
+
+        .stacked-container.my-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(-35px) scale(0.95) !important; }
+        .stacked-container.my-side .stacked-card:hover ~ .stacked-card { transform: translateY(35px) scale(0.95) !important; z-index: calc(500 - var(--card-idx)) !important; }
+
+        .stacked-container.opp-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(35px) scale(0.95) !important; }
+        .stacked-container.opp-side .stacked-card:hover ~ .stacked-card { transform: translateY(-35px) scale(0.95) !important; z-index: calc(500 - var(--card-idx)) !important; }
+
+        .stone-row { display: flex; justify-content: space-between; gap: 5px; padding: 5px 12px; background: rgba(20, 30, 40, 0.8); border-radius: 8px; margin: 2px 0; }
+        .stone-marker { flex: 1; height: 35px; background: #7f8c8d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #34495e; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); font-size: 16px; transition: 0.3s; position: relative; overflow: hidden; cursor: pointer; }
+        .stone-marker:hover { border-color: #f1c40f; transform: scale(1.05); color: #fff;}
+        .stone-marker.p1 { background: #2ecc71; border-color: #27ae60; color: #000; box-shadow: 0 0 10px #2ecc71; }
+        .stone-marker.p2 { background: #e74c3c; border-color: #c0392b; color: #fff; box-shadow: 0 0 10px #e74c3c; }
+        .env-mud { border-bottom: 6px solid #8d6e63 !important; }
+        .env-fog { border-bottom: 6px solid #9e9e9e !important; }
+
         .card-list { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 95px; padding-bottom: 5px; align-items: center; position: relative; }
-        .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: pointer; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8); background-size: cover; background-position: center; transition: transform 0.2s ease; image-rendering: high-quality; position: relative; }
+        .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: grab; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8); background-size: cover; background-position: center; transition: transform 0.2s ease; image-rendering: high-quality; position: relative; }
+        .card:active { cursor: grabbing; }
         
         .card.red { color: #ff9999; background-color: #c0392b; } 
         .card.blue { color: #99ccff; background-color: #2980b9;} 
@@ -51,40 +79,7 @@
         .card.tactic .card-num { font-size: 14px; text-align: center; line-height: 1.2; padding: 2px;}
         .card:hover { transform: translateY(-10px) scale(1.08); z-index: 999 !important; }
         .card.selected { border: 3px solid #f1c40f !important; transform: translateY(-15px) scale(1.12) !important; z-index: 999 !important; }
-
-        /* 💡 2. 스택(게임판) 정렬 & 부채꼴 애니메이션 완벽 복원 */
-        .stacked-container { position: relative; width: 100%; flex: 1; min-height: 105px; display: flex; justify-content: center; z-index: 20; pointer-events: none;}
-        .stacked-container.opp-side { align-items: flex-end; }
-        .stacked-container.my-side { align-items: flex-start; }
-
-        /* !important를 사용하여 .card의 position 속성을 강제로 무효화 */
-        .stacked-card { position: absolute !important; left: 50%; margin-left: -29px; transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease; z-index: var(--card-idx); }
         
-        .stacked-container.my-side .stacked-card { top: calc(15px + var(--card-idx) * 20px); pointer-events: auto; }
-        .stacked-container.opp-side .stacked-card { bottom: calc(15px + var(--card-idx) * 20px); pointer-events: auto; }
-
-        /* 기둥에 마우스를 올렸을 때 위아래로 쫙 펼쳐지기 */
-        .column:hover .stacked-container.my-side .stacked-card { top: calc(25px + var(--card-idx) * 35px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
-        .column:hover .stacked-container.opp-side .stacked-card { bottom: calc(25px + var(--card-idx) * 35px); box-shadow: 0 8px 16px rgba(0,0,0,0.6); }
-
-        /* 특정 카드에 마우스를 올렸을 때 하스스톤 스타일 팝업 및 밀어내기 */
-        .column .stacked-container .stacked-card:hover { transform: scale(1.3) !important; box-shadow: 0 20px 40px rgba(0,0,0,1) !important; z-index: 1000 !important; }
-
-        .stacked-container.my-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(-35px) !important; }
-        .stacked-container.my-side .stacked-card:hover ~ .stacked-card { transform: translateY(35px) !important; z-index: calc(500 - var(--card-idx)) !important; }
-
-        .stacked-container.opp-side:has(.stacked-card:hover) .stacked-card:not(:hover):has(~ .stacked-card:hover) { transform: translateY(35px) !important; }
-        .stacked-container.opp-side .stacked-card:hover ~ .stacked-card { transform: translateY(-35px) !important; z-index: calc(500 - var(--card-idx)) !important; }
-
-        /* 경계석 UI */
-        .stone-row { display: flex; justify-content: space-between; gap: 5px; padding: 5px 12px; background: rgba(20, 30, 40, 0.8); border-radius: 8px; margin: 2px 0; }
-        .stone-marker { flex: 1; height: 35px; background: #7f8c8d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #34495e; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); font-size: 16px; transition: 0.3s; position: relative; overflow: hidden; cursor: pointer; }
-        .stone-marker:hover { border-color: #f1c40f; transform: scale(1.05); color: #fff;}
-        .stone-marker.p1 { background: #2ecc71; border-color: #27ae60; color: #000; box-shadow: 0 0 10px #2ecc71; }
-        .stone-marker.p2 { background: #e74c3c; border-color: #c0392b; color: #fff; box-shadow: 0 0 10px #e74c3c; }
-        .env-mud { border-bottom: 6px solid #8d6e63 !important; }
-        .env-fog { border-bottom: 6px solid #9e9e9e !important; }
-
         .chat-container { flex: 1; max-width: 350px; background: rgba(30, 40, 50, 0.6); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); padding: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
         .chat-messages { flex: 1; overflow-y: auto; border: 1px solid rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; text-align: left; background: rgba(15, 20, 25, 0.8); font-size: 13px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
         .chat-input-area { display: flex; gap: 6px; } 
@@ -95,7 +90,7 @@
         .msg-p2 { background: #d35400; align-self: flex-start; border-bottom-left-radius: 2px; } 
         .msg-system { background: rgba(255,255,255,0.05); color: #f1c40f; font-size: 11px; text-align: center; align-self: center; border-radius: 10px; }
 
-        .action-panel { display: none; flex-direction: column; gap: 10px; justify-content: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20, 30, 40, 0.95); padding: 20px 40px; border-radius: 15px; border: 2px solid #f1c40f; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 9999; }
+        .action-panel { display: none; flex-direction: row; gap: 15px; justify-content: center; align-items: center; position: absolute; top: auto; bottom: 140px; left: 50%; transform: translateX(-50%); background: rgba(20, 30, 40, 0.95); padding: 15px 30px; border-radius: 15px; border: 2px solid #f1c40f; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 9999; white-space: nowrap; }
         .btn { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: white; transition: 0.2s; } 
         .btn:hover { transform: translateY(-2px); } .btn-play { background: #2ecc71; } .btn-trick { background: #9b59b6; }
         
@@ -160,6 +155,7 @@
         </div>
     </div>
 
+    <!-- 정보 모달 -->
     <div id="formation-modal" class="info-modal-overlay">
         <div class="result-box" style="border-color: #3498db; text-align: left;">
             <h2 style="color:#3498db; margin-top:0; border-bottom:1px solid #3498db; padding-bottom:10px;">🏆 쇼텐토텐 족보 강도</h2>
@@ -187,6 +183,20 @@
         </div>
     </div>
 
+    <!-- 시작 시 랜덤 선공 모달 -->
+    <div id="turn-select-screen" class="ai-modal-overlay">
+        <div class="result-box">
+            <div style="font-size: 32px; font-weight:900; color: #fff; margin-bottom:15px;">🎲 선공 선택</div>
+            <div style="font-size: 16px; margin-bottom: 30px; color: #bdc3c7;">게임이 준비되었습니다! 방장님, 시작 플레이어를 결정해 주세요.</div>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn btn-play" onclick="executeTurnSelect('p1')">🙋‍♂️ 내가 선공</button>
+                <button class="btn" style="background:#e74c3c;" onclick="executeTurnSelect('p2')">🤖 상대가 선공</button>
+                <button class="btn" style="background:#9b59b6;" onclick="executeTurnSelect('random')">🎲 랜덤 선택</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 난이도 모달 -->
     <div id="ai-select-screen" class="ai-modal-overlay">
         <div class="result-box">
             <div style="font-size: 32px; font-weight:900; color: #fff; margin-bottom:15px;">🤖 AI 난이도 선택</div>
@@ -220,6 +230,19 @@
 </div>
 
 <script>
+    // 💡 브라우저 창 크기 변화에 맞춰 해상도 자동 유지 (반응형 대응)
+    let currentScale = 1;
+    function adjustGameScale() {
+        const wrapper = document.getElementById('game-wrapper');
+        const scaleX = window.innerWidth / 1400;
+        const scaleY = window.innerHeight / 950;
+        currentScale = Math.min(scaleX, scaleY);
+        if (currentScale > 1.2) currentScale = 1.2;
+        wrapper.style.transform = `scale(${currentScale})`;
+    }
+    window.addEventListener('resize', adjustGameScale);
+    window.addEventListener('DOMContentLoaded', adjustGameScale);
+
     const firebaseConfig = {
       apiKey: "AIzaSyD5aeGP-U7E_eudovTtcFkO2H3W2agnbkI",
       authDomain: "schotten-totten-web.firebaseapp.com",
@@ -227,7 +250,8 @@
       projectId: "schotten-totten-web",
       storageBucket: "schotten-totten-web.firebasestorage.app",
       messagingSenderId: "85431663415",
-      appId: "1:85431663415:web:a3752031c347276be0f8b2"
+      appId: "1:85431663415:web:a3752031c347276be0f8b2",
+      measurementId: "G-CX0PKWYP4K"
     };
     
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
@@ -247,6 +271,7 @@
     let myRole = sessionStorage.getItem('st_role_' + roomId); 
     let roomData = null;
     let selectedHandIndex = null;
+    let selectedStoneIndex = null;
     let activeTrick = null; 
     let trickTarget = null;
     let scoutSelection = [];
@@ -274,12 +299,29 @@
         return null;
     }
 
+    // 💡 드래그 앤 드롭 지원 이벤트 추가
+    function handleDrop(e, stoneIdx) {
+        e.preventDefault();
+        if(roomData.turn !== myRole || activeTrick !== null) return;
+        let handIdx = e.dataTransfer.getData('text/plain');
+        if(handIdx !== null && handIdx !== '') {
+            selectedHandIndex = parseInt(handIdx);
+            let card = roomData[`${myRole}_hand`][selectedHandIndex];
+            if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
+                selectCardInHand(selectedHandIndex); 
+                return;
+            }
+            selectedStoneIndex = stoneIdx;
+            executePlay(); // 드래그 시에는 팝업 없이 즉시 배치
+        }
+    }
+
     function initBoardUI() {
         let oppHtml = '', myHtml = '', stonesHtml = '';
         for(let i=0; i<9; i++) {
             oppHtml += `<div class="column" id="opp-col-${i}"><div class="stacked-container opp-side" id="container-opp-${i}"></div></div>`;
-            myHtml += `<div class="column" id="my-col-${i}" onclick="selectStone(${i})"><div class="stacked-container my-side" id="container-my-${i}"></div></div>`;
-            stonesHtml += `<div class="stone-marker" id="stone-${i}" onclick="selectStone(${i})">${i+1}</div>`;
+            myHtml += `<div class="column" id="my-col-${i}" onclick="selectStone(${i})" ondragover="event.preventDefault()" ondrop="handleDrop(event, ${i})"><div class="stacked-container my-side" id="container-my-${i}"></div></div>`;
+            stonesHtml += `<div class="stone-marker" id="stone-${i}" onclick="selectStone(${i})" ondragover="event.preventDefault()" ondrop="handleDrop(event, ${i})">${i+1}</div>`;
         }
         document.getElementById('opp-field').innerHTML = oppHtml;
         document.getElementById('my-field').innerHTML = myHtml;
@@ -300,8 +342,8 @@
         if (!myRole) {
             if (roomData.gameState === 'WAITING' && !roomData.isAIMode) {
                 myRole = 'p2'; sessionStorage.setItem('st_role_' + roomId, 'p2');
-                roomRef.child('p2_online').set(true); roomRef.child('gameState').set('PLAYING');
-                chatRef.push({ sender: 'system', text: `👤 상대방이 접속했습니다! 게임이 시작됩니다.`, timestamp: Date.now() });
+                roomRef.child('p2_online').set(true); roomRef.child('gameState').set('TURN_SELECT');
+                chatRef.push({ sender: 'system', text: `👤 상대방이 접속했습니다! 방장이 선공을 결정합니다.`, timestamp: Date.now() });
             } else { alert("방이 꽉 찼거나 AI 모드 진행 중입니다."); return; }
         } else { roomRef.child(myRole + '_online').set(true); }
 
@@ -322,14 +364,31 @@
         requestAnimationFrame(() => { div.scrollTop = div.scrollHeight; });
     });
 
+    function executeTurnSelect(choice) {
+        let finalTurn = choice;
+        let msg = "";
+        if (choice === 'random') {
+            finalTurn = Math.random() < 0.5 ? 'p1' : 'p2';
+            const firstPlayerName = finalTurn === 'p1' ? '방장(나)' : (roomData.isAIMode ? 'AI' : '상대방');
+            msg = `🎲 랜덤 뽑기 결과: [${firstPlayerName}] 선공입니다!`;
+        } else {
+            const firstPlayerName = finalTurn === 'p1' ? '방장(나)' : (roomData.isAIMode ? 'AI' : '상대방');
+            msg = `🎯 방장의 선택: [${firstPlayerName}] 선공으로 시작합니다!`;
+        }
+        roomData.turn = finalTurn;
+        roomData.gameState = 'PLAYING';
+        roomRef.set(roomData);
+        chatRef.push({ sender: 'system', text: msg, timestamp: Date.now() });
+    }
+
     function executeAIStart(difficulty) {
         document.getElementById('ai-select-screen').style.display = 'none';
         roomData.p2_online = true; 
         roomData.isAIMode = true; 
         roomData.aiDifficulty = difficulty; 
-        roomData.gameState = 'PLAYING';
+        roomData.gameState = 'TURN_SELECT'; 
         roomRef.set(roomData);
-        chatRef.push({ sender: 'system', text: `🤖 인공지능(${difficulty}) 활성화! 방장님의 선공입니다.`, timestamp: Date.now() });
+        chatRef.push({ sender: 'system', text: `🤖 인공지능(${difficulty}) 세팅 완료! 방장님, 선공을 선택하세요.`, timestamp: Date.now() });
     }
 
     function checkAndRunAI() {
@@ -462,7 +521,7 @@
     }
 
     function selectCardInHand(index) {
-        if(roomData.turn !== myRole) return;
+        if(roomData.turn !== myRole || roomData.step !== 'PLAY') return;
 
         if(roomData.step === 'SCOUT_RETURN') {
             if(scoutSelection.includes(index)) scoutSelection = scoutSelection.filter(i => i !== index);
@@ -528,11 +587,13 @@
         }
     }
 
+    // 💡 선택 취소 기능이 포함된 카드 배치 액션
     function selectStone(index) {
         if(roomData.turn !== myRole) return;
         if(roomData.stones[index].owner !== 'none') { alert("이미 승부가 결정된 지역입니다."); return; }
         let oppRole = myRole === 'p1' ? 'p2' : 'p1';
 
+        // 속임수 연계 로직 (배신자, 재배치)
         if (activeTrick === 'TRAITOR' && trickTarget) {
             let limit = roomData.stones[index].env === 'MUD' ? 4 : 3;
             if (getFieldCards(myRole, index).length >= limit) { alert("여기는 자리가 없습니다!"); return; }
@@ -552,6 +613,10 @@
 
         if(selectedHandIndex === null) return;
         let card = roomData[`${myRole}_hand`][selectedHandIndex];
+        
+        // 광역 속임수 카드는 돌 클릭으로 배치 불가
+        if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) return;
+
         let limit = roomData.stones[index].env === 'MUD' ? 4 : 3;
         let myCardsCount = getFieldCards(myRole, index).length;
 
@@ -563,18 +628,41 @@
 
         if(card.tType === 'MUD' || card.tType === 'FOG') {
             if(roomData.stones[index].env !== 'none') { alert("이곳엔 이미 환경 카드가 적용되어 있습니다."); return; }
-            roomData.stones[index].env = card.tType;
-            chatRef.push({ sender: 'system', text: `🌩️ 환경 변화! ${index+1}번 지역에 [${card.name}] 발동!`, timestamp: Date.now() });
-            consumeTrickCard(true); return;
+        } else if(myCardsCount >= limit) { 
+            alert("이 경계석에는 이미 카드가 꽉 찼습니다."); return; 
         }
 
-        if(myCardsCount >= limit) { alert("이 경계석에는 이미 카드가 꽉 찼습니다."); return; }
+        // 💡 오발 클릭 방지: 확정 / 취소 팝업을 중앙 하단에 노출
+        selectedStoneIndex = index;
+        let actionPanel = document.getElementById('action-panel');
+        let cardName = card.type === 'tactic' ? card.name.replace('<br>', ' ') : `${card.value} 숫자`;
+        actionPanel.innerHTML = `
+            <div style="color:#fff; font-size:16px; font-weight:bold; display:flex; align-items:center;">
+                👉 ${index+1}번 구역에 [${cardName}] 카드를 배치할까요?
+            </div>
+            <button class="btn btn-play" onclick="executePlay()">✔️ 확정</button>
+            <button class="btn" style="background:#e74c3c;" onclick="cancelSelection()">❌ 취소</button>
+        `;
+        actionPanel.style.display = 'flex';
+        updateGameUI();
+    }
+
+    function executePlay() {
+        if(selectedHandIndex === null || selectedStoneIndex === null) return;
+        let index = selectedStoneIndex;
+        let card = roomData[`${myRole}_hand`][selectedHandIndex];
+
+        if(card.tType === 'MUD' || card.tType === 'FOG') {
+            roomData.stones[index].env = card.tType;
+            chatRef.push({ sender: 'system', text: `🌩️ 환경 변화! ${index+1}번 지역에 [${card.name.replace('<br>','')}] 발동!`, timestamp: Date.now() });
+            consumeTrickCard(true); return;
+        }
 
         let playedCard = roomData[`${myRole}_hand`].splice(selectedHandIndex, 1)[0];
         if(playedCard.type === 'tactic') roomData[`${myRole}_tactics_count`] = (roomData[`${myRole}_tactics_count`]||0) + 1;
         
         addCardToField(myRole, index, playedCard);
-        roomData.step = 'DRAW'; selectedHandIndex = null; activeTrick = null; trickTarget = null;
+        roomData.step = 'DRAW'; selectedHandIndex = null; selectedStoneIndex = null; activeTrick = null; trickTarget = null;
         document.getElementById('action-panel').style.display = 'none';
         
         recalculateAllStones(); 
@@ -598,7 +686,7 @@
     function consumeTrickCard(isEnv = false) {
         roomData[`${myRole}_hand`].splice(selectedHandIndex, 1);
         roomData[`${myRole}_tactics_count`] = (roomData[`${myRole}_tactics_count`]||0) + 1;
-        roomData.step = 'DRAW'; activeTrick = null; trickTarget = null; selectedHandIndex = null;
+        roomData.step = 'DRAW'; activeTrick = null; trickTarget = null; selectedHandIndex = null; selectedStoneIndex = null;
         document.getElementById('action-panel').style.display = 'none';
         recalculateAllStones(); roomRef.set(roomData);
     }
@@ -613,7 +701,7 @@
     }
 
     function cancelSelection() {
-        selectedHandIndex = null; activeTrick = null; trickTarget = null; scoutSelection = [];
+        selectedHandIndex = null; selectedStoneIndex = null; activeTrick = null; trickTarget = null; scoutSelection = [];
         document.getElementById('action-panel').style.display = 'none';
         updateGameUI();
     }
@@ -777,6 +865,21 @@
         if (roomData.p2_online || roomData.isAIMode) document.getElementById('ai-start-btn').style.display = 'none';
         else document.getElementById('ai-start-btn').style.display = 'inline-block';
 
+        if (roomData.gameState === 'TURN_SELECT') {
+            document.getElementById('result-screen').style.display = 'none';
+            table.className = "game-table waiting";
+            if (myRole === 'p1') {
+                document.getElementById('turn-select-screen').style.display = 'flex';
+                status.innerText = "⏳ 선공을 선택해 주세요.";
+            } else {
+                document.getElementById('turn-select-screen').style.display = 'none';
+                status.innerText = "⏳ 방장이 선공을 선택하고 있습니다...";
+            }
+            return;
+        } else {
+            document.getElementById('turn-select-screen').style.display = 'none';
+        }
+
         if (roomData.gameState === 'WAITING') { status.innerText = "⏳ 2P를 기다리는 중입니다..."; table.className = "game-table waiting"; return; }
         
         if (roomData.gameState === 'GAME_OVER') {
@@ -801,12 +904,14 @@
             } else if (roomData.turn === myRole) {
                 if (activeTrick) {
                     status.innerText = trickMsg; status.style.color = "#9b59b6";
+                } else if (selectedHandIndex !== null && selectedStoneIndex !== null) {
+                    status.innerText = "👆 배치를 최종 확정하거나 취소해 주세요."; status.style.color = "#f1c40f";
                 } else if (selectedHandIndex !== null) {
                     let card = roomData[`${myRole}_hand`][selectedHandIndex];
                     if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
                         status.innerText = "🔮 화면 가운데 [사용하기] 버튼을 누르거나, 다른 카드를 선택하세요."; status.style.color = "#9b59b6";
                     } else {
-                        status.innerText = "👆 카드를 선택했습니다. 배치할 기둥이나 경계석(숫자)을 클릭하세요!"; status.style.color = "#2ecc71";
+                        status.innerText = "👆 카드를 선택했습니다. 배치할 기둥이나 경계석으로 드래그하거나 클릭하세요!"; status.style.color = "#2ecc71";
                     }
                 } else {
                     status.innerText = "🟢 내 차례입니다! 낼 카드를 선택하세요."; status.style.color = "#f1c40f";
@@ -841,6 +946,15 @@
             if(card.desc) div.setAttribute('data-tooltip', card.desc);
             div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
             div.onclick = () => selectCardInHand(idx);
+            
+            // 드래그 속성 부여
+            div.draggable = true;
+            div.ondragstart = (e) => {
+                if(roomData.turn !== myRole || roomData.step !== 'PLAY') { e.preventDefault(); return; }
+                e.dataTransfer.setData('text/plain', idx);
+                selectedHandIndex = idx;
+            };
+            
             handDiv.appendChild(div);
         });
 
