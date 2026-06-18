@@ -73,8 +73,10 @@
         .card.white { color: #ffffff; background-color: #ecf0f1; border-color: #bdc3c7;} 
         
         .card.tactic { background-color: #2c3e50; border: 2px solid #9b59b6; color: #f1c40f; }
-        .card-back-clan { background: repeating-linear-gradient(45deg, #795548, #795548 8px, #5D4037 8px, #5D4037 16px) !important; border-color: #3e2723 !important; }
-        .card-back-tactic { background: repeating-linear-gradient(45deg, #8e44ad, #8e44ad 8px, #732d91 8px, #732d91 16px) !important; border-color: #4a235a !important; }
+        
+        /* 💡 카드 뒷면 디자인 (사용자 이미지 연동) */
+        .card-back-clan { background: url('images/back.png') center/cover no-repeat, repeating-linear-gradient(45deg, #795548, #795548 8px, #5D4037 8px, #5D4037 16px) !important; border-color: #3e2723 !important; }
+        .card-back-tactic { background: url('images/back2.png') center/cover no-repeat, repeating-linear-gradient(45deg, #8e44ad, #8e44ad 8px, #732d91 8px, #732d91 16px) !important; border-color: #4a235a !important; }
 
         .card[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); color: #f1c40f; padding: 8px 12px; border-radius: 6px; font-size: 11px; white-space: pre-line; width: 140px; text-align: left; line-height: 1.4; border: 1px solid #9b59b6; box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 10000; pointer-events: none; }
 
@@ -83,11 +85,23 @@
         .card:hover:not(.dragging) { transform: translateY(-10px) scale(1.08); z-index: 999 !important; }
         .card.selected { border: 3px solid #f1c40f !important; transform: translateY(-15px) scale(1.12) !important; z-index: 999 !important; }
         
-        /* 💡 덱 디자인 및 애니메이션 (입체감 + 빛남) */
+        /* 💡 전략 카드 발동 드롭존 (마법진 연출) */
+        #tactic-dropzone {
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: 150px; height: 220px;
+            background: rgba(142, 68, 173, 0.85); border: 4px dashed #f1c40f; border-radius: 15px;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: #fff; font-weight: 900; font-size: 16px; text-align: center; z-index: 100000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 30px rgba(155, 89, 182, 0.6); transition: 0.2s; pointer-events: auto;
+        }
+        #tactic-dropzone.drag-over {
+            background: rgba(155, 89, 182, 0.95); border-style: solid; transform: translateY(-50%) scale(1.08);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9), 0 0 50px #f1c40f;
+        }
+
         .deck-ui {
             width: 58px; height: 90px; border-radius: 6px; border: 2px solid #000; position: relative;
             cursor: default; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px #000; margin-left: 10px; margin-bottom: 5px;
+            color: white; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 3px #000, -1px -1px 3px #000; margin-left: 10px; margin-bottom: 5px;
             transition: transform 0.2s ease, filter 0.2s ease, border-color 0.2s;
         }
         @keyframes deckPulse {
@@ -97,7 +111,6 @@
         }
         .deck-ui.highlight { animation: deckPulse 1.5s infinite; cursor: pointer; border-color: #f1c40f !important; }
         
-        /* 💡 비행 애니메이션용 (드로우 시 발동) */
         .flying-effect {
             position: absolute !important; z-index: 99999 !important; pointer-events: none !important;
             box-shadow: 0 20px 40px rgba(0,0,0,0.8) !important; margin-left: 0 !important;
@@ -118,7 +131,7 @@
         .btn { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: white; transition: 0.2s; } 
         .btn:hover { transform: translateY(-2px); } .btn-play { background: #2ecc71; } .btn-trick { background: #9b59b6; }
         
-        .result-overlay, .ai-modal-overlay, .info-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
+        .result-overlay, .draw-overlay, .ai-modal-overlay, .info-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
         .result-box { background: rgba(25, 35, 45, 0.95); padding: 50px 60px; border-radius: 28px; border: 3px solid #f1c40f; text-align: center; color: #fff; max-width: 600px; line-height: 1.6;}
         .btn-restart { background: #f1c40f; color: #0d1217; font-size: 20px; padding: 15px 45px; border-radius: 14px; cursor: pointer; font-weight: 900; border:none; margin-top: 20px;}
     </style>
@@ -158,8 +171,12 @@
 
             <div id="action-panel" class="action-panel"></div>
 
+            <!-- 💡 속임수 전략 카드 발동 드롭존 -->
+            <div id="tactic-dropzone" ondragover="handleTacticDragOver(event)" ondragleave="handleTacticDragLeave(event)" ondrop="handleTacticDrop(event)">
+                🔮<br>여기에 놓아<br>카드 효과 발동
+            </div>
+
             <div class="section" style="background: rgba(10, 15, 20, 0.6); padding: 8px; flex-direction: row; align-items: center;">
-                <!-- 💡 덱이 물리적으로 존재하는 것처럼 보이는 UI -->
                 <div style="display: flex; gap: 15px; margin-right: 15px; padding-left: 10px;">
                     <div id="deck-clan-ui" class="deck-ui card-back-clan" onclick="attemptDrawAnimation('clan')">부대덱<br><span id="deck-clan-count" style="font-size:18px;">54</span></div>
                     <div id="deck-tactic-ui" class="deck-ui card-back-tactic" onclick="attemptDrawAnimation('tactic')">전략덱<br><span id="deck-tactic-count" style="font-size:18px;">10</span></div>
@@ -180,7 +197,6 @@
         </div>
     </div>
 
-    <!-- 정보 모달 -->
     <div id="formation-modal" class="info-modal-overlay">
         <div class="result-box" style="border-color: #3498db; text-align: left;">
             <h2 style="color:#3498db; margin-top:0; border-bottom:1px solid #3498db; padding-bottom:10px;">🏆 쇼텐토텐 족보 강도</h2>
@@ -208,7 +224,6 @@
         </div>
     </div>
 
-    <!-- 시작 시 랜덤 선공 모달 -->
     <div id="turn-select-screen" class="ai-modal-overlay">
         <div class="result-box">
             <div style="font-size: 32px; font-weight:900; color: #fff; margin-bottom:15px;">🎲 선공 선택</div>
@@ -221,7 +236,6 @@
         </div>
     </div>
 
-    <!-- AI 난이도 모달 -->
     <div id="ai-select-screen" class="ai-modal-overlay">
         <div class="result-box">
             <div style="font-size: 32px; font-weight:900; color: #fff; margin-bottom:15px;">🤖 AI 난이도 선택</div>
@@ -232,6 +246,16 @@
                 <button class="btn" style="background:#e74c3c;" onclick="executeAIStart('HARD')">🔴 어려움</button>
             </div>
             <button class="btn" style="margin-top:25px; background:transparent; border:1px solid rgba(255,255,255,0.3);" onclick="toggleModal('ai-select-screen')">돌아가기</button>
+        </div>
+    </div>
+
+    <div id="draw-overlay" class="draw-overlay">
+        <div class="result-box" style="padding: 30px;">
+            <h2 style="color: #fff; margin-top:0;">🎴 카드를 뽑아 턴을 종료하세요</h2>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-play" onclick="drawCard('clan')">⚔️ 부대 덱에서 뽑기</button>
+                <button class="btn btn-trick" onclick="drawCard('tactic')">📜 전략 덱에서 뽑기</button>
+            </div>
         </div>
     </div>
 
@@ -246,7 +270,7 @@
 
 <script>
     let currentScale = 1;
-    let isAnimating = false; // 드로우 중복 방지 플래그
+    let isAnimating = false;
 
     function adjustGameScale() {
         const wrapper = document.getElementById('game-wrapper');
@@ -327,16 +351,15 @@
         return null;
     }
 
+    // 💡 일반 기둥 드래그 앤 드롭 함수들
     function handleDragOver(e, colIdx) {
         e.preventDefault();
         if(roomData.turn !== myRole || activeTrick !== null) return;
         document.getElementById(`my-col-${colIdx}`).classList.add('drag-over');
     }
-
     function handleDragLeave(e, colIdx) {
         document.getElementById(`my-col-${colIdx}`).classList.remove('drag-over');
     }
-
     function handleDrop(e, stoneIdx) {
         e.preventDefault();
         document.getElementById(`my-col-${stoneIdx}`).classList.remove('drag-over');
@@ -348,17 +371,49 @@
             let card = roomData[`${myRole}_hand`][selectedHandIndex];
 
             if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
-                selectCardInHand(selectedHandIndex); 
-                return;
+                return; // 속임수 카드는 기둥에 놓지 못하고 드롭존으로 가야함
             }
 
             let limit = roomData.stones[stoneIdx].env === 'MUD' ? 4 : 3;
-            let myCardsCount = getFieldCards(myRole, stoneIdx).length;
-            if (myCardsCount >= limit) { alert("이 경계석에는 이미 카드가 꽉 찼습니다."); return; }
+            if (getFieldCards(myRole, stoneIdx).length >= limit) { alert("이 경계석에는 이미 카드가 꽉 찼습니다."); return; }
             if (roomData.stones[stoneIdx].owner !== 'none') { alert("이미 승부가 결정된 지역입니다."); return; }
 
             selectedStoneIndex = stoneIdx;
             executePlay(); 
+        }
+    }
+
+    // 💡 속임수 전략 카드 전용 드롭존 함수들
+    function handleTacticDragOver(e) {
+        e.preventDefault();
+        document.getElementById('tactic-dropzone').classList.add('drag-over');
+    }
+    function handleTacticDragLeave(e) {
+        document.getElementById('tactic-dropzone').classList.remove('drag-over');
+    }
+    function handleTacticDrop(e) {
+        e.preventDefault();
+        let dropzone = document.getElementById('tactic-dropzone');
+        dropzone.classList.remove('drag-over');
+        dropzone.style.display = 'none';
+
+        if(roomData.turn !== myRole || activeTrick !== null) return;
+
+        let handIdx = e.dataTransfer.getData('text/plain');
+        if(handIdx !== null && handIdx !== '') {
+            let idx = parseInt(handIdx);
+            let card = roomData[`${myRole}_hand`][idx];
+            
+            if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
+                let myCount = roomData[`${myRole}_tactics_count`] || 0;
+                let oppCount = roomData[`${myRole === 'p1'?'p2':'p1'}_tactics_count`] || 0;
+                if(myCount >= oppCount + 1) { 
+                    alert("상대방보다 전략 카드를 2장 이상 많이 쓸 수 없습니다."); 
+                    return; 
+                }
+                selectedHandIndex = idx;
+                triggerTrick(card.tType); // 팝업 없이 즉시 속임수 발동
+            }
         }
     }
 
@@ -761,7 +816,6 @@
         recalculateAllStones(); roomRef.set(roomData);
     }
 
-    // 💡 덱 심도 UI 업데이트
     function getDeckShadow(count) {
         if(count === 0) return 'none';
         let shadow = '';
@@ -771,7 +825,6 @@
         return shadow;
     }
 
-    // 💡 드로우 애니메이션 및 로직
     function attemptDrawAnimation(deckType) {
         if (roomData.step !== 'DRAW' || roomData.turn !== myRole || isAnimating) return;
         let deck = deckType === 'clan' ? roomData.clanDeck : roomData.tacticsDeck;
@@ -1022,7 +1075,7 @@
                 } else if (selectedHandIndex !== null) {
                     let card = roomData[`${myRole}_hand`][selectedHandIndex];
                     if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
-                        status.innerText = "🔮 화면 가운데 [사용하기] 버튼을 누르거나, 다른 카드를 선택하세요."; status.style.color = "#9b59b6";
+                        status.innerText = "🔮 오른쪽 마법진으로 카드를 끌어다 놓거나 화면 가운데 [사용하기]를 누르세요!"; status.style.color = "#9b59b6";
                     } else {
                         status.innerText = "👆 카드를 선택했습니다. 기둥/경계석으로 드래그 하거나 클릭하세요!"; status.style.color = "#2ecc71";
                     }
@@ -1036,7 +1089,6 @@
             }
         }
 
-        // 💡 덱 UI 업데이트 및 상태창
         let clanCount = roomData.clanDeck ? roomData.clanDeck.length : 0;
         let tacticCount = roomData.tacticsDeck ? roomData.tacticsDeck.length : 0;
         
@@ -1092,9 +1144,16 @@
                 setTimeout(() => {
                     div.classList.add('dragging');
                     if(document.getElementById("drag-ghost")) document.getElementById("drag-ghost").remove();
+                    
+                    if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
+                        document.getElementById('tactic-dropzone').style.display = 'flex';
+                    }
                 }, 10);
             };
-            div.ondragend = () => { div.classList.remove('dragging'); };
+            div.ondragend = () => { 
+                div.classList.remove('dragging'); 
+                document.getElementById('tactic-dropzone').style.display = 'none';
+            };
             
             handDiv.appendChild(div);
         });
