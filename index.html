@@ -28,8 +28,6 @@
         
         .grid-9 { display: flex; justify-content: space-between; gap: 5px; flex: 1; min-height: 0; }
         .column { flex: 1; min-height: 0; background: rgba(15, 20, 25, 0.8); border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 4px; position: relative; display: flex; flex-direction: column; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); z-index: 1; transition: 0.2s; cursor: pointer; }
-        
-        /* 💡 드래그 오버 시 기둥을 네온 라이트처럼 강조 (찰진 피드백) */
         .column:hover { z-index: 100; border-color: rgba(241, 196, 15, 0.5); background: rgba(30, 40, 50, 0.9); }
         .column.drag-over { border-color: #2ecc71 !important; background: rgba(46, 204, 113, 0.2) !important; transform: scale(1.03); box-shadow: 0 0 25px rgba(46, 204, 113, 0.5); z-index: 200; }
 
@@ -63,7 +61,6 @@
 
         .card-list { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; min-height: 95px; padding-bottom: 5px; align-items: center; position: relative; }
         
-        /* 💡 드래그 시작 시 손에 있는 카드는 투명하게 만듦 (리얼리티 부여) */
         .card { width: 58px; height: 90px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; cursor: grab; border: 1.5px solid #000; box-shadow: 0 4px 8px rgba(0,0,0,0.8); background-size: cover; background-position: center; transition: transform 0.2s ease, opacity 0.2s; image-rendering: high-quality; position: relative; }
         .card:active { cursor: grabbing; }
         .card.dragging { opacity: 0.2; transform: scale(0.9); }
@@ -86,6 +83,27 @@
         .card:hover:not(.dragging) { transform: translateY(-10px) scale(1.08); z-index: 999 !important; }
         .card.selected { border: 3px solid #f1c40f !important; transform: translateY(-15px) scale(1.12) !important; z-index: 999 !important; }
         
+        /* 💡 덱 디자인 및 애니메이션 (입체감 + 빛남) */
+        .deck-ui {
+            width: 58px; height: 90px; border-radius: 6px; border: 2px solid #000; position: relative;
+            cursor: default; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px #000; margin-left: 10px; margin-bottom: 5px;
+            transition: transform 0.2s ease, filter 0.2s ease, border-color 0.2s;
+        }
+        @keyframes deckPulse {
+            0% { filter: brightness(1); transform: translateY(0); }
+            50% { filter: brightness(1.35); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(241,196,15,0.6); }
+            100% { filter: brightness(1); transform: translateY(0); }
+        }
+        .deck-ui.highlight { animation: deckPulse 1.5s infinite; cursor: pointer; border-color: #f1c40f !important; }
+        
+        /* 💡 비행 애니메이션용 (드로우 시 발동) */
+        .flying-effect {
+            position: absolute !important; z-index: 99999 !important; pointer-events: none !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8) !important; margin-left: 0 !important;
+            transition: left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.35s ease, opacity 0.35s ease !important;
+        }
+
         .chat-container { flex: 1; max-width: 350px; background: rgba(30, 40, 50, 0.6); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); padding: 12px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
         .chat-messages { flex: 1; overflow-y: auto; border: 1px solid rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; text-align: left; background: rgba(15, 20, 25, 0.8); font-size: 13px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
         .chat-input-area { display: flex; gap: 6px; } 
@@ -100,7 +118,7 @@
         .btn { padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: white; transition: 0.2s; } 
         .btn:hover { transform: translateY(-2px); } .btn-play { background: #2ecc71; } .btn-trick { background: #9b59b6; }
         
-        .result-overlay, .draw-overlay, .ai-modal-overlay, .info-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
+        .result-overlay, .ai-modal-overlay, .info-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; justify-content: center; align-items: center; background: rgba(6, 10, 15, 0.88); backdrop-filter: blur(10px); }
         .result-box { background: rgba(25, 35, 45, 0.95); padding: 50px 60px; border-radius: 28px; border: 3px solid #f1c40f; text-align: center; color: #fff; max-width: 600px; line-height: 1.6;}
         .btn-restart { background: #f1c40f; color: #0d1217; font-size: 20px; padding: 15px 45px; border-radius: 14px; cursor: pointer; font-weight: 900; border:none; margin-top: 20px;}
     </style>
@@ -141,9 +159,10 @@
             <div id="action-panel" class="action-panel"></div>
 
             <div class="section" style="background: rgba(10, 15, 20, 0.6); padding: 8px; flex-direction: row; align-items: center;">
-                <div style="display: flex; flex-direction: column; gap: 5px; margin-right: 15px;">
-                    <div style="background: #5D4037; border: 2px solid #3e2723; border-radius: 6px; padding: 10px; text-align: center; font-size: 12px; font-weight: bold;">부대덱<br><span id="deck-clan-count">54</span></div>
-                    <div style="background: #732d91; border: 2px solid #4a235a; border-radius: 6px; padding: 10px; text-align: center; font-size: 12px; font-weight: bold;">전략덱<br><span id="deck-tactic-count">10</span></div>
+                <!-- 💡 덱이 물리적으로 존재하는 것처럼 보이는 UI -->
+                <div style="display: flex; gap: 15px; margin-right: 15px; padding-left: 10px;">
+                    <div id="deck-clan-ui" class="deck-ui card-back-clan" onclick="attemptDrawAnimation('clan')">부대덱<br><span id="deck-clan-count" style="font-size:18px;">54</span></div>
+                    <div id="deck-tactic-ui" class="deck-ui card-back-tactic" onclick="attemptDrawAnimation('tactic')">전략덱<br><span id="deck-tactic-count" style="font-size:18px;">10</span></div>
                 </div>
                 <div id="my-hand" class="card-list" style="flex:1;"></div>
             </div>
@@ -216,16 +235,6 @@
         </div>
     </div>
 
-    <div id="draw-overlay" class="draw-overlay">
-        <div class="result-box" style="padding: 30px;">
-            <h2 style="color: #fff; margin-top:0;">🎴 카드를 뽑아 턴을 종료하세요</h2>
-            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
-                <button class="btn btn-play" onclick="drawCard('clan')">⚔️ 부대 덱에서 뽑기</button>
-                <button class="btn btn-trick" onclick="drawCard('tactic')">📜 전략 덱에서 뽑기</button>
-            </div>
-        </div>
-    </div>
-
     <div id="result-screen" class="result-overlay">
         <div class="result-box">
             <div id="final-winner-title" style="font-size: 44px; font-weight: 900; color: #fff; margin-bottom:20px;">🎉 WINNER!</div>
@@ -236,8 +245,9 @@
 </div>
 
 <script>
-    // 💡 브라우저 창 크기 변화에 맞춰 해상도 자동 유지 (반응형 대응)
     let currentScale = 1;
+    let isAnimating = false; // 드로우 중복 방지 플래그
+
     function adjustGameScale() {
         const wrapper = document.getElementById('game-wrapper');
         const scaleX = window.innerWidth / 1400;
@@ -248,6 +258,18 @@
     }
     window.addEventListener('resize', adjustGameScale);
     window.addEventListener('DOMContentLoaded', adjustGameScale);
+
+    function getRelativePos(el) {
+        const wrapper = document.getElementById('game-wrapper');
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        return {
+            left: (rect.left - wrapperRect.left) / currentScale,
+            top: (rect.top - wrapperRect.top) / currentScale,
+            width: rect.width / currentScale,
+            height: rect.height / currentScale
+        };
+    }
 
     const firebaseConfig = {
       apiKey: "AIzaSyD5aeGP-U7E_eudovTtcFkO2H3W2agnbkI",
@@ -305,7 +327,6 @@
         return null;
     }
 
-    // 💡 찰진 드래그 앤 드롭을 위한 시각적 피드백 함수
     function handleDragOver(e, colIdx) {
         e.preventDefault();
         if(roomData.turn !== myRole || activeTrick !== null) return;
@@ -326,20 +347,18 @@
             selectedHandIndex = parseInt(handIdx);
             let card = roomData[`${myRole}_hand`][selectedHandIndex];
 
-            // 전략/속임수 카드면 드래그 배치를 막고 클릭 유도 팝업을 띄움
             if (card.type === 'tactic' && ['TRAITOR', 'DESERTER', 'REDEPLOY', 'SCOUT'].includes(card.tType)) {
                 selectCardInHand(selectedHandIndex); 
                 return;
             }
 
-            // 놓을 수 있는지 즉각 판별
             let limit = roomData.stones[stoneIdx].env === 'MUD' ? 4 : 3;
             let myCardsCount = getFieldCards(myRole, stoneIdx).length;
             if (myCardsCount >= limit) { alert("이 경계석에는 이미 카드가 꽉 찼습니다."); return; }
             if (roomData.stones[stoneIdx].owner !== 'none') { alert("이미 승부가 결정된 지역입니다."); return; }
 
             selectedStoneIndex = stoneIdx;
-            executePlay(); // 드래그 앤 드롭 시에는 묻지 않고 즉시 배치(찰진 손맛)
+            executePlay(); 
         }
     }
 
@@ -347,7 +366,6 @@
         let oppHtml = '', myHtml = '', stonesHtml = '';
         for(let i=0; i<9; i++) {
             oppHtml += `<div class="column" id="opp-col-${i}"><div class="stacked-container opp-side" id="container-opp-${i}"></div></div>`;
-            // 드래그 이벤트 주입
             myHtml += `<div class="column" id="my-col-${i}" onclick="selectStone(${i})" ondragover="handleDragOver(event, ${i})" ondragleave="handleDragLeave(event, ${i})" ondrop="handleDrop(event, ${i})"><div class="stacked-container my-side" id="container-my-${i}"></div></div>`;
             stonesHtml += `<div class="stone-marker" id="stone-${i}" onclick="selectStone(${i})" ondragover="handleDragOver(event, ${i})" ondragleave="handleDragLeave(event, ${i})" ondrop="handleDrop(event, ${i})">${i+1}</div>`;
         }
@@ -379,7 +397,7 @@
         document.getElementById('share-url').innerText = `초대 링크: ${window.location.origin}${window.location.pathname}?room=${roomId}`;
 
         updateGameUI();
-        checkAndRunAI(); 
+        if(!isAnimating) checkAndRunAI(); 
     });
 
     chatRef.limitToLast(20).on('child_added', (snapshot) => {
@@ -526,7 +544,6 @@
         chatRef.push({ sender: 'system', text: `🏠 확장판 방이 생성되었습니다. 상대방을 초대하세요.`, timestamp: Date.now() });
     }
 
-    // 💡 다시하기 버그 완벽 수정 (데이터 초기화 및 역할 유지)
     function executeServerReset() {
         let isAI = roomData ? roomData.isAIMode : false;
         let p2Online = roomData ? roomData.p2_online : false;
@@ -586,6 +603,7 @@
                 if(scoutSelection.length === 2) {
                     scoutSelection.sort((a,b)=>b-a).forEach(idx => {
                         let c = roomData[`${myRole}_hand`].splice(idx, 1)[0];
+                        if(!roomData.clanDeck) roomData.clanDeck = [];
                         roomData.clanDeck.push(c); 
                     });
                     scoutSelection = []; roomData.turn = (myRole === 'p1' ? 'p2' : 'p1'); roomData.step = 'PLAY';
@@ -643,9 +661,8 @@
         }
     }
 
-    // 💡 클릭 배치 시 오발 방지 모달 로직
     function selectStone(index) {
-        if(roomData.turn !== myRole) return;
+        if(roomData.turn !== myRole || roomData.step !== 'PLAY') return;
         if(roomData.stones[index].owner !== 'none') { alert("이미 승부가 결정된 지역입니다."); return; }
         let oppRole = myRole === 'p1' ? 'p2' : 'p1';
 
@@ -686,7 +703,6 @@
             alert("이 경계석에는 이미 카드가 꽉 찼습니다."); return; 
         }
 
-        // 💡 오발 방지 팝업 등장 (클릭으로 플레이할 때만)
         selectedStoneIndex = index;
         let actionPanel = document.getElementById('action-panel');
         let cardName = card.type === 'tactic' ? card.name.replace('<br>', ' ') : `${card.value} 숫자`;
@@ -745,9 +761,52 @@
         recalculateAllStones(); roomRef.set(roomData);
     }
 
+    // 💡 덱 심도 UI 업데이트
+    function getDeckShadow(count) {
+        if(count === 0) return 'none';
+        let shadow = '';
+        let thickness = Math.min(Math.ceil(count / 2), 15);
+        for(let i=1; i<=thickness; i++) { shadow += `-${i}px ${i}px 0 #222, `; }
+        shadow += `-${thickness+2}px ${thickness+2}px 8px rgba(0,0,0,0.8)`;
+        return shadow;
+    }
+
+    // 💡 드로우 애니메이션 및 로직
+    function attemptDrawAnimation(deckType) {
+        if (roomData.step !== 'DRAW' || roomData.turn !== myRole || isAnimating) return;
+        let deck = deckType === 'clan' ? roomData.clanDeck : roomData.tacticsDeck;
+        if (!deck || deck.length === 0) { alert("이 덱은 모두 소진되었습니다!"); return; }
+        
+        isAnimating = true;
+        let startEl = document.getElementById(deckType === 'clan' ? 'deck-clan-ui' : 'deck-tactic-ui');
+        let handArea = document.getElementById('my-hand');
+        
+        let clone = document.createElement('div');
+        clone.className = `card flying-effect ${deckType === 'clan' ? 'card-back-clan' : 'card-back-tactic'}`;
+        
+        let relStart = getRelativePos(startEl);
+        clone.style.left = `${relStart.left}px`;
+        clone.style.top = `${relStart.top}px`;
+        
+        document.getElementById('game-wrapper').appendChild(clone);
+        
+        let relHand = getRelativePos(handArea);
+        
+        setTimeout(() => {
+            clone.style.left = `${relHand.left + relHand.width/2 - 29}px`;
+            clone.style.top = `${relHand.top + 10}px`;
+            clone.style.transform = 'scale(1.1) rotate(5deg)';
+        }, 20);
+        
+        setTimeout(() => {
+            clone.remove();
+            isAnimating = false;
+            drawCard(deckType);
+        }, 370);
+    }
+
     function drawCard(deckType) {
         let deck = deckType === 'clan' ? roomData.clanDeck : roomData.tacticsDeck;
-        if(!deck || deck.length === 0) { alert("이 덱은 모두 소진되었습니다!"); return; }
         if(!roomData[`${myRole}_hand`]) roomData[`${myRole}_hand`] = [];
         roomData[`${myRole}_hand`].push(deck.pop());
         roomData.step = 'PLAY'; roomData.turn = (myRole === 'p1' ? 'p2' : 'p1');
@@ -967,6 +1026,8 @@
                     } else {
                         status.innerText = "👆 카드를 선택했습니다. 기둥/경계석으로 드래그 하거나 클릭하세요!"; status.style.color = "#2ecc71";
                     }
+                } else if (roomData.step === 'DRAW') {
+                    status.innerText = "🎴 반짝이는 덱을 클릭하여 턴을 종료하세요!"; status.style.color = "#3498db";
                 } else {
                     status.innerText = "🟢 내 차례입니다! 카드를 끌어다 놓거나 클릭하세요."; status.style.color = "#f1c40f";
                 }
@@ -975,9 +1036,26 @@
             }
         }
 
-        document.getElementById('draw-overlay').style.display = (roomData.step === 'DRAW' && roomData.turn === myRole) ? 'flex' : 'none';
-        document.getElementById('deck-clan-count').innerText = roomData.clanDeck ? roomData.clanDeck.length : 0;
-        document.getElementById('deck-tactic-count').innerText = roomData.tacticsDeck ? roomData.tacticsDeck.length : 0;
+        // 💡 덱 UI 업데이트 및 상태창
+        let clanCount = roomData.clanDeck ? roomData.clanDeck.length : 0;
+        let tacticCount = roomData.tacticsDeck ? roomData.tacticsDeck.length : 0;
+        
+        document.getElementById('deck-clan-count').innerText = clanCount;
+        document.getElementById('deck-tactic-count').innerText = tacticCount;
+
+        let clanUi = document.getElementById('deck-clan-ui');
+        let tacticUi = document.getElementById('deck-tactic-ui');
+        
+        clanUi.style.boxShadow = getDeckShadow(clanCount);
+        tacticUi.style.boxShadow = getDeckShadow(tacticCount);
+
+        if (roomData.step === 'DRAW' && roomData.turn === myRole && !isAnimating) {
+            if(clanCount > 0) clanUi.classList.add('highlight'); else clanUi.classList.remove('highlight');
+            if(tacticCount > 0) tacticUi.classList.add('highlight'); else tacticUi.classList.remove('highlight');
+        } else {
+            clanUi.classList.remove('highlight');
+            tacticUi.classList.remove('highlight');
+        }
 
         const oppHandDiv = document.getElementById('opp-hand-area');
         oppHandDiv.innerHTML = '';
@@ -1001,7 +1079,6 @@
             div.innerHTML = `<div class="card-num">${card.type==='tactic' ? card.name : card.value}</div>`;
             div.onclick = () => selectCardInHand(idx);
             
-            // 💡 찰진 드래그 앤 드롭: 집어 든 카드 시각적 처리
             div.draggable = true;
             div.ondragstart = (e) => {
                 if(roomData.turn !== myRole || roomData.step !== 'PLAY') { e.preventDefault(); return; }
@@ -1010,7 +1087,7 @@
                 let ghost = div.cloneNode(true);
                 ghost.id = "drag-ghost"; ghost.style.position = "absolute"; ghost.style.top = "-1000px"; ghost.style.transform = "scale(1.1)";
                 document.body.appendChild(ghost);
-                e.dataTransfer.setDragImage(ghost, 29, 45); // 마우스 포인터를 카드의 중앙에 맞춤
+                e.dataTransfer.setDragImage(ghost, 29, 45); 
 
                 setTimeout(() => {
                     div.classList.add('dragging');
